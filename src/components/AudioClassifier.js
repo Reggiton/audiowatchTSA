@@ -281,6 +281,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
           const normalizedLevel = Math.min(average / 128, 1);
 
           if (onAudioLevel) {
+            console.log('Sending audio level:', normalizedLevel); // DEBUG
             onAudioLevel(normalizedLevel);
           }
 
