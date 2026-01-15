@@ -1,15 +1,18 @@
-"use client";
+""use client" 
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
-import { Controller, FormProvider, useFormContext } from "react-hook-form";
+import { Controller, FormProvider, useFormContext } from "react-hook-form"
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
+// Form provider
 const Form = FormProvider
 
+// Context for field name
 const FormFieldContext = React.createContext({})
 
+// Form field wrapper (react-hook-form Controller)
 const FormField = (
   {
     ...props
@@ -22,6 +25,7 @@ const FormField = (
   );
 }
 
+// Hook to get field + item info
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
@@ -45,8 +49,10 @@ const useFormField = () => {
   }
 }
 
+// Context for item id
 const FormItemContext = React.createContext({})
 
+// Form item wrapper
 const FormItem = React.forwardRef(({ className, ...props }, ref) => {
   const id = React.useId()
 
@@ -58,6 +64,7 @@ const FormItem = React.forwardRef(({ className, ...props }, ref) => {
 })
 FormItem.displayName = "FormItem"
 
+// Label tied to current field
 const FormLabel = React.forwardRef(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField()
 
@@ -71,6 +78,7 @@ const FormLabel = React.forwardRef(({ className, ...props }, ref) => {
 })
 FormLabel.displayName = "FormLabel"
 
+// Control wrapper (adds aria props)
 const FormControl = React.forwardRef(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
@@ -89,6 +97,7 @@ const FormControl = React.forwardRef(({ ...props }, ref) => {
 })
 FormControl.displayName = "FormControl"
 
+// Help text
 const FormDescription = React.forwardRef(({ className, ...props }, ref) => {
   const { formDescriptionId } = useFormField()
 
@@ -102,6 +111,7 @@ const FormDescription = React.forwardRef(({ className, ...props }, ref) => {
 })
 FormDescription.displayName = "FormDescription"
 
+// Error / message text
 const FormMessage = React.forwardRef(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message) : children
@@ -122,6 +132,7 @@ const FormMessage = React.forwardRef(({ className, children, ...props }, ref) =>
 })
 FormMessage.displayName = "FormMessage"
 
+// Exports
 export {
   useFormField,
   Form,
