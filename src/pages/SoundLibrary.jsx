@@ -30,7 +30,7 @@ export default function SoundLibrary() {
 
   const { data: corrections = [] } = useQuery({
     queryKey: ['soundCorrections'],
-    queryFn: () => api.entities.SoundCorrection.list(),
+    queryFn: () => api.entities.list('sound_corrections'),
   });
 
   const customSoundNames = useMemo(() => {
@@ -48,9 +48,9 @@ export default function SoundLibrary() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['soundSettings'],
     queryFn: async () => {
-      const allSettings = await api.entities.SoundSettings.list();
+      const allSettings = await api.entities.list('sound_settings');
       if (allSettings.length === 0) {
-        return await api.entities.SoundSettings.create({
+        return await api.entities.create('sound_settings', {
           enabled_sounds: ['alarm', 'doorbell', 'baby_crying', 'smoke_alarm', 'siren'],
           vibration_strength: 'medium',
           flash_alerts: true,
@@ -62,7 +62,7 @@ export default function SoundLibrary() {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: ({ id, data }) => api.entities.SoundSettings.update(id, data),
+    mutationFn: ({ id, data }) => api.entities.update('sound_settings', id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['soundSettings'] }),
   });
 
