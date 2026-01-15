@@ -1,14 +1,21 @@
-"use client"
+"use client" // Client component
 
+// React import
 import * as React from "react"
+
+// Radix hover card primitives
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Base hover card
 const HoverCard = HoverCardPrimitive.Root
 
+// Hover card trigger
 const HoverCardTrigger = HoverCardPrimitive.Trigger
 
+// Hover card content
 const HoverCardContent = React.forwardRef(({ className, align = "center", sideOffset = 4, ...props }, ref) => (
   <HoverCardPrimitive.Content
     ref={ref}
@@ -22,4 +29,5 @@ const HoverCardContent = React.forwardRef(({ className, align = "center", sideOf
 ))
 HoverCardContent.displayName = HoverCardPrimitive.Content.displayName
 
+// Exports
 export { HoverCard, HoverCardTrigger, HoverCardContent }
