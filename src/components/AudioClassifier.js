@@ -284,42 +284,6 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
       }
     };
 
-    const cleanup = () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-
-      if (scriptNodeRef.current) {
-        scriptNodeRef.current.disconnect();
-        scriptNodeRef.current = null;
-      }
-
-      if (analyserRef.current) {
-        analyserRef.current.disconnect();
-        analyserRef.current = null;
-      }
-
-      if (sourceRef.current) {
-        sourceRef.current.disconnect();
-        sourceRef.current = null;
-      }
-
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
-
-      if (onAudioLevel) {
-        onAudioLevel(0);
-      }
-    };
-
     if (isListening) {
       setup();
     }
