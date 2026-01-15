@@ -268,11 +268,11 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         };
 
         // Connect audio pipeline
-        // IMPORTANT: Connect in series for proper audio flow
-        source.connect(scriptNode);
+        // FIX: Analyser must be in the signal chain to receive data
         source.connect(analyser);
+        analyser.connect(scriptNode);
         scriptNode.connect(audioContext.destination);
-        console.log('✅ Audio pipeline connected');
+        console.log('✅ Audio pipeline connected: source -> analyser -> scriptNode -> destination');
 
         // Start audio level monitoring
         const updateAudioLevel = () => {
