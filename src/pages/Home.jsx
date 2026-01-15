@@ -1,3 +1,9 @@
+/**
+ * Home Page
+ * Main dashboard showing listening status, detection display, and recent activity
+ * Manages audio classification, alerts, and onboarding flow
+ */
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/apiClient';
