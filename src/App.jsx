@@ -1,3 +1,9 @@
+/**
+ * App Root Component
+ * Sets up routing, React Query provider, and authentication context
+ * Configures global providers and renders the main application structure
+ */
+
 import { Toaster } from "./components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from './lib/query-client'
@@ -6,14 +12,19 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import PageNotFound from './lib/PageNotFound'
 import { AuthProvider, useAuth } from './lib/AuthContext'
 
+// Extract page configuration
 const { Pages, Layout, mainPage } = pagesConfig
+
+// Determine main/home page (defaults to first page if not specified)
 const mainPageKey = mainPage ?? Object.keys(Pages)[0]
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>
 
+// Wrapper component to conditionally apply layout to pages
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>
 
+// Main app component that handles authentication state and routing
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth()
   
@@ -35,14 +46,16 @@ const AuthenticatedApp = () => {
     }
   }
   
-  // Render the main app
+  // Render the main app with all routes
   return (
     <Routes>
+      {/* Home/main page route */}
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
           <MainPage />
         </LayoutWrapper>
       } />
+      {/* Dynamic routes for all pages from config */}
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
@@ -54,11 +67,13 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      {/* 404 catch-all route */}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   )
 }
 
+// Root App component with all providers
 function App() {
   return (
     <AuthProvider>
