@@ -21,9 +21,9 @@ export default function Settings() {
       if (allSettings.length === 0) {
         return await api.entities.create('sound_settings', {
           enabled_sounds: ['Speech', 'Dog', 'Alarm', 'Doorbell', 'Baby cry, infant cry'],
-          vibration_strength: 'medium',
+          vibration_intensity: 50,
           flash_alerts: true,
-          sensitivity: 'medium',
+          sensitivity: 50,
         });
       }
       return allSettings[0];
@@ -44,18 +44,6 @@ export default function Settings() {
       data: { [key]: value },
     });
   };
-
-  const vibrationStrengthValue = {
-    light: 33,
-    medium: 66,
-    strong: 100,
-  }[settings?.vibration_strength] || 66;
-
-  const sensitivityValue = {
-    low: 33,
-    medium: 66,
-    high: 100,
-  }[settings?.sensitivity] || 66;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
@@ -128,29 +116,28 @@ export default function Settings() {
                   <Smartphone className="w-5 h-5 text-slate-400" />
                   <span className="font-medium">Vibration Strength</span>
                 </div>
-                <span className="text-sm text-violet-400 capitalize">
-                  {settings?.vibration_strength || 'medium'}
+                <span className="text-sm text-violet-400">
+                  {settings?.vibration_intensity || 50}%
                 </span>
               </div>
               <Slider
-                value={[vibrationStrengthValue]}
+                value={[settings?.vibration_intensity || 50]}
                 onValueChange={([value]) => {
-                  const strength = value <= 33 ? 'light' : value <= 66 ? 'medium' : 'strong';
-                  updateSetting('vibration_strength', strength);
-                  // Haptic feedback
+                  updateSetting('vibration_intensity', value);
+                  // Haptic feedback proportional to strength
                   if (navigator.vibrate) {
-                    const duration = strength === 'light' ? 50 : strength === 'medium' ? 150 : 300;
+                    const duration = Math.floor(value * 3); // 0-300ms
                     navigator.vibrate(duration);
                   }
                 }}
+                min={10}
                 max={100}
-                step={33}
+                step={1}
                 className="[&_[role=slider]]:bg-violet-500"
                 disabled={isLoading || !settings}
               />
               <div className="flex justify-between mt-2 text-xs text-slate-500">
                 <span>Light</span>
-                <span>Medium</span>
                 <span>Strong</span>
               </div>
             </div>
@@ -161,24 +148,23 @@ export default function Settings() {
                   <Gauge className="w-5 h-5 text-slate-400" />
                   <span className="font-medium">Detection Sensitivity</span>
                 </div>
-                <span className="text-sm text-emerald-400 capitalize">
-                  {settings?.sensitivity || 'medium'}
+                <span className="text-sm text-emerald-400">
+                  {settings?.sensitivity || 50}%
                 </span>
               </div>
               <Slider
-                value={[sensitivityValue]}
+                value={[settings?.sensitivity || 50]}
                 onValueChange={([value]) => {
-                  const sensitivity = value <= 33 ? 'low' : value <= 66 ? 'medium' : 'high';
-                  updateSetting('sensitivity', sensitivity);
+                  updateSetting('sensitivity', value);
                 }}
+                min={10}
                 max={100}
-                step={33}
+                step={1}
                 className="[&_[role=slider]]:bg-emerald-500"
                 disabled={isLoading || !settings}
               />
               <div className="flex justify-between mt-2 text-xs text-slate-500">
                 <span>Low</span>
-                <span>Medium</span>
                 <span>High</span>
               </div>
             </div>
