@@ -1,4 +1,3 @@
-// Simple API client to replace Base44 SDK
 // This is a minimal implementation - expand based on your actual needs
 
 const apiClient = {
@@ -26,7 +25,7 @@ const apiClient = {
     }
   },
   
-  // App logs methods (placeholder - can be removed if not needed)
+  // App logs methods
   appLogs: {
     logUserInApp: async (pageName) => {
       // Optional: Send analytics to your own backend
@@ -34,18 +33,17 @@ const apiClient = {
       return Promise.resolve()
     }
   },
-  
-  // Add other API methods as needed
-  // For example, if you need to store sound history:
+
+  // Store sound history:
   sounds: {
     saveDetection: async (soundData) => {
-      // Could save to localStorage or your own backend
+  
       const history = JSON.parse(localStorage.getItem('soundHistory') || '[]')
       history.unshift({
         ...soundData,
         timestamp: new Date().toISOString()
       })
-      // Keep only last 100 detections
+      // Kep only last 100 detections
       localStorage.setItem('soundHistory', JSON.stringify(history.slice(0, 100)))
       return soundData
     },
