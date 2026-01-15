@@ -1,8 +1,15 @@
+/**
+ * Onboarding Flow Component
+ * First-time user tutorial explaining app features
+ * Walks through microphone permissions, alerts, and customization options
+ */
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/button';
 import { X, ChevronRight, Mic, Bell, Settings as SettingsIcon, Zap } from 'lucide-react';
 
+// Onboarding step definitions with icon, color, and optional actions
 const steps = [
   {
     title: "Welcome to AudioWatch",
@@ -15,7 +22,7 @@ const steps = [
     description: "We need access to your microphone to detect sounds in real-time. Your audio is processed locally and never recorded or stored.",
     icon: Mic,
     color: "from-blue-500 to-cyan-600",
-    action: "permission"
+    action: "permission" // Triggers microphone permission request
   },
   {
     title: "Smart Alerts",
@@ -32,23 +39,29 @@ const steps = [
 ];
 
 export default function OnboardingFlow({ onComplete, onSkip }) {
+  // Track current step index (0-3)
   const [currentStep, setCurrentStep] = useState(0);
+  // Track whether microphone permission was granted
   const [permissionGranted, setPermissionGranted] = useState(false);
 
+  // Handle progression to next step, requesting permissions when needed
   const handleNext = async () => {
     const step = steps[currentStep];
     
+    // Request microphone permission if this step requires it
     if (step.action === 'permission') {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Immediately stop the stream - just checking permission
         stream.getTracks().forEach(track => track.stop());
         setPermissionGranted(true);
       } catch (err) {
         console.error('Permission denied:', err);
-        return;
+        return; // Don't advance if permission denied
       }
     }
     
+    // Advance to next step or complete onboarding
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -56,6 +69,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
     }
   };
 
+  // Current step data and derived states
   const step = steps[currentStep];
   const Icon = step.icon;
   const isLastStep = currentStep === steps.length - 1;
@@ -72,6 +86,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
       >
+        {/* Skip button positioned above the card */}
         <button
           onClick={onSkip}
           className="absolute -top-12 right-0 text-slate-400 hover:text-white transition-colors"
@@ -80,6 +95,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
         </button>
 
         <div className="bg-slate-900 rounded-3xl border border-slate-700 overflow-hidden">
+          {/* Progress bar showing completion percentage */}
           <div className="h-1 bg-slate-800">
             <motion.div
               className="h-full bg-gradient-to-r from-violet-500 to-purple-600"
@@ -90,6 +106,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
           </div>
 
           <div className="p-8">
+            {/* Animated icon display */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -104,6 +121,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
               </motion.div>
             </AnimatePresence>
 
+            {/* Step title and description with slide transition */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -117,6 +135,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
               </motion.div>
             </AnimatePresence>
 
+            {/* Success message shown after permission granted */}
             {needsPermission && permissionGranted && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -127,7 +146,9 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
               </motion.div>
             )}
 
+            {/* Navigation buttons */}
             <div className="flex gap-3">
+              {/* Back button (hidden on first step) */}
               {currentStep > 0 && (
                 <Button
                   variant="outline"
@@ -137,6 +158,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
                   Back
                 </Button>
               )}
+              {/* Continue/Get Started button */}
               <Button
                 onClick={handleNext}
                 className={`flex-1 h-12 bg-gradient-to-r ${step.color} hover:opacity-90 text-white font-semibold`}
@@ -146,6 +168,7 @@ export default function OnboardingFlow({ onComplete, onSkip }) {
               </Button>
             </div>
 
+            {/* Step indicator dots */}
             <div className="flex justify-center gap-2 mt-6">
               {steps.map((_, index) => (
                 <div
