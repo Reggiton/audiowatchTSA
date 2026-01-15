@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bell, Baby, Car, Dog, AlertTriangle, Phone, Volume2, Siren, Hand, Flame } from 'lucide-react';
 import { Button } from './ui/button';
 
+// Icons used for each detected sound type
 const soundIcons = {
   alarm: AlertTriangle,
   doorbell: Bell,
@@ -16,6 +17,7 @@ const soundIcons = {
   siren: Siren,
 };
 
+// Display labels shown to the user for each sound
 const soundLabels = {
   alarm: 'ALARM DETECTED',
   doorbell: 'DOORBELL',
@@ -29,6 +31,7 @@ const soundLabels = {
   siren: 'EMERGENCY SIREN',
 };
 
+// Color themes for each alert type
 const alertColors = {
   alarm: { bg: 'bg-amber-500', text: 'text-amber-500' },
   doorbell: { bg: 'bg-blue-500', text: 'text-blue-500' },
@@ -42,6 +45,7 @@ const alertColors = {
   siren: { bg: 'bg-red-500', text: 'text-red-500' },
 };
 
+// Figures out a general category based on the sound name
 const getCategoryForSound = (soundName) => {
   const lower = soundName.toLowerCase();
   
@@ -91,11 +95,13 @@ const getCategoryForSound = (soundName) => {
 };
 
 export default function AlertBanner({ alert, onDismiss, onCorrect, flashEnabled }) {
+  // Pick icon, label, and color based on detected sound
   const Icon = soundIcons[alert?.sound_type] || Volume2;
   const label = soundLabels[alert?.sound_type] || alert?.sound_type?.toUpperCase() || 'SOUND DETECTED';
   const colors = alertColors[alert?.sound_type] || { bg: 'bg-violet-500', text: 'text-violet-500' };
   const category = alert?.sound_type ? getCategoryForSound(alert.sound_type) : null;
   
+  // Triggers vibration patterns for supported devices
   useEffect(() => {
     if (alert && navigator.vibrate) {
       const patterns = {
@@ -120,19 +126,16 @@ export default function AlertBanner({ alert, onDismiss, onCorrect, flashEnabled 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
+          {/* Flashing background for emergency alerts */}
           {flashEnabled && (
             <motion.div
               className={`absolute inset-0 ${colors.bg}`}
-              animate={{
-                opacity: [0.3, 0.8, 0.3],
-              }}
-              transition={{
-                duration: 0.5,
-                repeat: Infinity,
-              }}
+              animate={{ opacity: [0.3, 0.8, 0.3] }}
+              transition={{ duration: 0.5, repeat: Infinity }}
             />
           )}
           
+          {/* Dark overlay behind the alert */}
           <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" />
           
           <motion.div
@@ -144,13 +147,8 @@ export default function AlertBanner({ alert, onDismiss, onCorrect, flashEnabled 
             <div className="bg-slate-900 rounded-3xl border border-slate-700 overflow-hidden shadow-2xl">
               <div className={`${colors.bg} p-8 flex flex-col items-center`}>
                 <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                  }}
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.6, repeat: Infinity }}
                 >
                   <Icon className="w-20 h-20 text-white" />
                 </motion.div>
@@ -159,21 +157,20 @@ export default function AlertBanner({ alert, onDismiss, onCorrect, flashEnabled 
               <div className="p-6 text-center">
                 <motion.h2
                   className="text-2xl font-bold text-white mb-2"
-                  animate={{
-                    opacity: [1, 0.7, 1],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                  }}
+                  animate={{ opacity: [1, 0.7, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
                 >
                   {label}
                 </motion.h2>
+
+                {/* Category badge */}
                 {category && (
                   <div className="inline-flex items-center px-3 py-1 rounded-full bg-slate-800 mb-3">
                     <span className="text-xs font-medium text-slate-300">{category}</span>
                   </div>
                 )}
+
+                {/* Confidence score */}
                 <p className="text-slate-400 mb-6">
                   Confidence: {alert?.confidence || 95}%
                 </p>
@@ -186,6 +183,8 @@ export default function AlertBanner({ alert, onDismiss, onCorrect, flashEnabled 
                     <X className="w-5 h-5 mr-2" />
                     Dismiss
                   </Button>
+
+                  {/* Option to correct the detected sound */}
                   {onCorrect && (
                     <button
                       onClick={onCorrect}
