@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { X, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,8 +14,13 @@ export default function SoundCorrectionDialog({ detection, open, onClose, onCorr
   const [correctedType, setCorrectedType] = useState('');
 
   const handleSubmit = () => {
+    // Ignore empty input
     if (!correctedType.trim()) return;
+
+    // Send correction back to parent
     onCorrect(correctedType.trim());
+
+    // Reset input after submit
     setCorrectedType('');
   };
 
@@ -36,9 +40,13 @@ export default function SoundCorrectionDialog({ detection, open, onClose, onCorr
               <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
                 <p className="text-amber-300 font-medium mb-1">Detected as:</p>
-                <p className="text-white capitalize">{detection?.sound_type?.replace(/_/g, ' ')}</p>
+                <p className="text-white capitalize">
+                  {detection?.sound_type?.replace(/_/g, ' ')}
+                </p>
                 {detection?.rawClass && (
-                  <p className="text-slate-400 text-xs mt-1">YamNet: {detection.rawClass}</p>
+                  <p className="text-slate-400 text-xs mt-1">
+                    // YAMNet label: {detection.rawClass}
+                  </p>
                 )}
               </div>
             </div>
@@ -53,7 +61,10 @@ export default function SoundCorrectionDialog({ detection, open, onClose, onCorr
               onChange={(e) => setCorrectedType(e.target.value)}
               placeholder="e.g., doorbell, alarm, dog barking"
               className="bg-slate-800 border-slate-700 text-white"
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              onKeyDown={(e) => {
+                // Submit on Enter (onKeyPress is deprecated in React)
+                if (e.key === 'Enter') handleSubmit();
+              }}
             />
           </div>
 
