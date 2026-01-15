@@ -1,5 +1,3 @@
-// This is a minimal implementation - expand based on your actual needs
-
 const apiClient = {
   // Auth methods
   auth: {
