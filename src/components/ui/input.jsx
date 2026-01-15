@@ -1,7 +1,10 @@
+// React import
 import * as React from "react"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Input component
 const Input = React.forwardRef(({ className, type, ...props }, ref) => {
   return (
     (<input
@@ -16,4 +19,5 @@ const Input = React.forwardRef(({ className, type, ...props }, ref) => {
 })
 Input.displayName = "Input"
 
+// Export
 export { Input }
