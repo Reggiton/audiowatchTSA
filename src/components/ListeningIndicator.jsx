@@ -1,27 +1,33 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Mic, MicOff } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { Mic, MicOff } from "lucide-react";
 
 export default function ListeningIndicator({ isListening }) {
+  // Shows a big mic button with animated pulse rings when listening
   return (
     <div className="relative">
       <motion.div
+        // Main circular button styles (changes color based on listening state)
         className={`w-32 h-32 rounded-full flex items-center justify-center relative ${
-          isListening 
-            ? 'bg-gradient-to-br from-violet-500 to-purple-600' 
-            : 'bg-slate-800'
+          isListening
+            ? "bg-gradient-to-br from-violet-500 to-purple-600"
+            : "bg-slate-800"
         }`}
+        // Small interactive scaling on hover/tap
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
+        {/* Icon changes depending on whether the mic is active */}
         {isListening ? (
           <Mic className="w-12 h-12 text-white" />
         ) : (
           <MicOff className="w-12 h-12 text-slate-400" />
         )}
 
+        {/* Pulse rings only show when listening */}
         {isListening && (
           <>
+            {/* Inner pulse ring */}
             <motion.div
               className="absolute inset-0 rounded-full bg-violet-500/30"
               animate={{
@@ -31,9 +37,10 @@ export default function ListeningIndicator({ isListening }) {
               transition={{
                 duration: 2,
                 repeat: Infinity,
-                ease: "easeOut"
+                ease: "easeOut",
               }}
             />
+            {/* Outer pulse ring (slightly delayed for a nicer effect) */}
             <motion.div
               className="absolute inset-0 rounded-full bg-violet-500/20"
               animate={{
@@ -44,19 +51,20 @@ export default function ListeningIndicator({ isListening }) {
                 duration: 2,
                 repeat: Infinity,
                 ease: "easeOut",
-                delay: 0.5
+                delay: 0.5,
               }}
             />
           </>
         )}
       </motion.div>
-      
+
+      {/* Text under the button */}
       <div className="text-center mt-4">
         <p className="text-lg font-semibold text-white">
-          {isListening ? 'Listening' : 'Paused'}
+          {isListening ? "Listening" : "Paused"}
         </p>
         <p className="text-sm text-slate-400">
-          {isListening ? 'Tap to pause' : 'Tap to start'}
+          {isListening ? "Tap to pause" : "Tap to start"}
         </p>
       </div>
     </div>
