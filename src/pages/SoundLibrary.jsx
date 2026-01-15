@@ -1,3 +1,9 @@
+/**
+ * Sound Library Page
+ * Browse and enable/disable individual sounds from YAMNet's sound class
+ * Search and filter sounds by category
+ */
+
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../lib/apiClient';
