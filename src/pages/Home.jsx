@@ -19,17 +19,11 @@ export default function Home() {
   const [audioLevel, setAudioLevel] = useState(0);
   const [currentAlert, setCurrentAlert] = useState(null);
   const [permissionStatus, setPermissionStatus] = useState('prompt');
-  const [modelLoading, setModelLoading] = useState(false);
-  const [modelLoaded, setModelLoaded] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [correctionDialogOpen, setCorrectionDialogOpen] = useState(false);
   const [detectionToCorrect, setDetectionToCorrect] = useState(null);
   const [detectionProbability, setDetectionProbability] = useState(0);
   const [currentDetectedSound, setCurrentDetectedSound] = useState(null);
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const streamRef = useRef(null);
-  const animationFrameRef = useRef(null);
   const lastDetectionTimeRef = useRef(0);
   
   const queryClient = useQueryClient();
@@ -37,9 +31,9 @@ export default function Home() {
   const { data: onboardingStatus } = useQuery({
     queryKey: ['onboardingStatus'],
     queryFn: async () => {
-      const statuses = await api.entities.OnboardingStatus.list();
+      const statuses = await api.entities.list('onboarding_status');
       if (statuses.length === 0) {
-        const newStatus = await api.entities.OnboardingStatus.create({
+        const newStatus = await api.entities.create('onboarding_status', {
           completed: false,
           step: 0,
           skipped: false
@@ -58,7 +52,7 @@ export default function Home() {
   const { data: settings } = useQuery({
     queryKey: ['soundSettings'],
     queryFn: async () => {
-      const allSettings = await api.entities.SoundSettings.list();
+      const allSettings = await api.entities.list('sound_settings');
       if (allSettings.length === 0) {
         const defaultSettings = {
           enabled_sounds: ['Speech', 'Dog', 'Alarm', 'Doorbell', 'Baby cry, infant cry'],
@@ -66,24 +60,22 @@ export default function Home() {
           flash_alerts: true,
           sensitivity: 'medium',
         };
-        return await api.entities.SoundSettings.create(defaultSettings);
+        return await api.entities.create('sound_settings', defaultSettings);
       }
       return allSettings[0];
     },
   });
 
-  const { data: corrections = [] } = useQuery({
-    queryKey: ['soundCorrections'],
-    queryFn: () => api.entities.SoundCorrection.list(),
-  });
-
   const { data: recentDetections = [] } = useQuery({
     queryKey: ['recentDetections'],
-    queryFn: () => api.entities.DetectedSound.list('-timestamp', 5),
+    queryFn: async () => {
+      const all = await api.entities.list('detected_sounds');
+      return all.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+    },
   });
 
   const createDetectionMutation = useMutation({
-    mutationFn: (data) => api.entities.DetectedSound.create(data),
+    mutationFn: (data) => api.entities.create('detected_sounds', data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recentDetections'] }),
   });
 
@@ -99,147 +91,69 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const loadModel = async () => {
-      setModelLoading(true);
-      const loaded = await AudioClassifier.loadModel();
-      setModelLoaded(loaded);
-      setModelLoading(false);
-    };
-    loadModel();
-  }, []);
+  const handleClassification = useCallback((result) => {
+    if (!result) return;
 
-  useEffect(() => {
-    if (corrections.length > 0) {
-      AudioClassifier.loadUserCorrections(corrections);
+    // Update audio visualization
+    const topPrediction = result.predictions[0];
+    if (topPrediction) {
+      setDetectionProbability(topPrediction.confidence * 100);
+      setCurrentDetectedSound(topPrediction.label);
     }
-  }, [corrections]);
 
-  useEffect(() => {
-    if (isListening && settings && animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      analyzeAudio();
-    }
-  }, [settings, isListening]);
-
-  const startListening = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ 
-        sampleRate: 16000 
-      });
-      
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 2048;
-      
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-      
-      await AudioClassifier.startStreamingClassification(stream, audioContextRef.current);
-      
-      setIsListening(true);
-      localStorage.setItem('audiowatch_listening', 'true');
-      setPermissionStatus('granted');
-      analyzeAudio();
-    } catch (err) {
-      console.error('Error starting audio:', err);
-      localStorage.setItem('audiowatch_listening', 'false');
-    }
-  };
-
-  const analyzeAudio = useCallback(async () => {
-    if (!analyserRef.current) return;
-    
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-    analyserRef.current.getByteFrequencyData(dataArray);
-    
-    const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-    const normalizedLevel = Math.min(average / 128, 1);
-    setAudioLevel(normalizedLevel);
-    
-    const result = AudioClassifier.getLatestResult();
-    
-    if (result) {
-      setDetectionProbability(result.confidence);
-      setCurrentDetectedSound(result.soundType);
-      
+    // Handle detected sound alerts
+    if (result.detectedSound && result.confidence > 0.5) {
       const now = Date.now();
-      if (settings?.enabled_sounds?.includes(result.soundType) && 
-          result.confidence > 30 &&
-          now - lastDetectionTimeRef.current > 2000) {
+      
+      // Throttle alerts (only one every 2 seconds)
+      if (now - lastDetectionTimeRef.current > 2000) {
         lastDetectionTimeRef.current = now;
         
         const detection = {
-          sound_type: result.soundType,
-          confidence: result.confidence,
+          sound_type: result.detectedSound,
+          confidence: Math.round(result.confidence * 100),
           timestamp: new Date().toISOString(),
           acknowledged: false,
-          rawClass: result.rawClass,
-          allPredictions: result.allPredictions
+          rawClass: result.detectedSound,
+          allPredictions: result.predictions.map(p => ({
+            label: p.label,
+            confidence: p.confidence
+          }))
         };
         
         setCurrentAlert(detection);
         createDetectionMutation.mutate(detection);
-      }
-    } else {
-      setDetectionProbability(prev => Math.max(0, prev - 2));
-      if (detectionProbability < 10) {
-        setCurrentDetectedSound(null);
+        
+        // Vibrate if supported
+        if ('vibrate' in navigator && settings?.vibration_strength) {
+          const patterns = {
+            low: [100],
+            medium: [200, 100, 200],
+            high: [300, 100, 300, 100, 300]
+          };
+          navigator.vibrate(patterns[settings.vibration_strength] || patterns.medium);
+        }
       }
     }
-    
-    animationFrameRef.current = requestAnimationFrame(analyzeAudio);
   }, [settings, createDetectionMutation]);
-
-  const stopListening = () => {
-    AudioClassifier.stopStreamingClassification();
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    setIsListening(false);
-    localStorage.setItem('audiowatch_listening', 'false');
-    setAudioLevel(0);
-    setDetectionProbability(0);
-    setCurrentDetectedSound(null);
-  };
 
   const toggleListening = async () => {
     if (isListening) {
-      stopListening();
+      setIsListening(false);
+      localStorage.setItem('audiowatch_listening', 'false');
+      setAudioLevel(0);
+      setDetectionProbability(0);
+      setCurrentDetectedSound(null);
     } else {
       if (permissionStatus !== 'granted') {
         const granted = await requestPermission();
         if (!granted) return;
       }
-      startListening();
+      setIsListening(true);
+      localStorage.setItem('audiowatch_listening', 'true');
+      setPermissionStatus('granted');
     }
   };
-
-  useEffect(() => {
-    const shouldListen = localStorage.getItem('audiowatch_listening') === 'true';
-    if (shouldListen && modelLoaded && !isListening) {
-      if (permissionStatus === 'granted') {
-        startListening();
-      }
-    }
-  }, [modelLoaded, isListening, permissionStatus]);
-
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     navigator.permissions?.query({ name: 'microphone' })
@@ -254,7 +168,7 @@ export default function Home() {
         d.timestamp === currentAlert.timestamp
       );
       if (detection) {
-        await api.entities.DetectedSound.update(detection.id, { acknowledged: true });
+        await api.entities.update('detected_sounds', detection.id, { acknowledged: true });
         queryClient.invalidateQueries({ queryKey: ['recentDetections'] });
       }
     }
@@ -270,7 +184,7 @@ export default function Home() {
   const saveCorrection = async (correctedType) => {
     if (!detectionToCorrect) return;
     
-    await api.entities.SoundCorrection.create({
+    await api.entities.create('sound_corrections', {
       original_sound_type: detectionToCorrect.sound_type,
       corrected_sound_type: correctedType,
       yamnet_class: detectionToCorrect.rawClass || detectionToCorrect.sound_type,
@@ -284,7 +198,7 @@ export default function Home() {
 
   const completeOnboarding = async () => {
     if (onboardingStatus) {
-      await api.entities.OnboardingStatus.update(onboardingStatus.id, {
+      await api.entities.update('onboarding_status', onboardingStatus.id, {
         completed: true,
         step: 4
       });
@@ -295,7 +209,7 @@ export default function Home() {
 
   const skipOnboarding = async () => {
     if (onboardingStatus) {
-      await api.entities.OnboardingStatus.update(onboardingStatus.id, {
+      await api.entities.update('onboarding_status', onboardingStatus.id, {
         skipped: true
       });
       queryClient.invalidateQueries({ queryKey: ['onboardingStatus'] });
@@ -305,6 +219,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      {/* Audio Classifier Component - handles all audio processing */}
+      <AudioClassifier
+        isListening={isListening}
+        onClassification={handleClassification}
+        enabledSounds={settings?.enabled_sounds || []}
+      />
+
       {showOnboarding && (
         <OnboardingFlow
           onComplete={completeOnboarding}
@@ -386,36 +307,6 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
-
-        {(modelLoading || !modelLoaded) && (
-          <motion.div
-            className="bg-violet-500/10 border border-violet-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin mt-0.5" />
-            <div>
-              <p className="font-medium text-violet-400">Loading AI Model...</p>
-              <p className="text-sm text-violet-400/70">Downloading YamNet sound classification model</p>
-            </div>
-          </motion.div>
-        )}
-        
-        {modelLoaded && !modelLoading && (
-          <motion.div
-            className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <div className="w-5 h-5 bg-emerald-400 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">✓</span>
-            </div>
-            <div>
-              <p className="font-medium text-emerald-400">AI Model Ready</p>
-              <p className="text-sm text-emerald-400/70">YamNet is ready to detect sounds</p>
-            </div>
-          </motion.div>
-        )}
 
         {permissionStatus === 'denied' && (
           <motion.div
