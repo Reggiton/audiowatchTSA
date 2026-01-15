@@ -262,8 +262,9 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         };
 
         // Connect audio pipeline
-        source.connect(analyser);
+        // IMPORTANT: Connect in series for proper audio flow
         source.connect(scriptNode);
+        source.connect(analyser);
         scriptNode.connect(audioContext.destination);
 
         // Start audio level monitoring
@@ -274,11 +275,17 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
             return;
           }
 
-          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-          analyserRef.current.getByteFrequencyData(dataArray);
+          const dataArray = new Uint8Array(analyserRef.current.fftSize);
+          analyserRef.current.getByteTimeDomainData(dataArray);
 
-          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-          const normalizedLevel = Math.min(average / 128, 1);
+          // Calculate RMS (Root Mean Square) for better audio level
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            const normalized = (dataArray[i] - 128) / 128;
+            sum += normalized * normalized;
+          }
+          const rms = Math.sqrt(sum / dataArray.length);
+          const normalizedLevel = Math.min(rms * 3, 1); // Amplify by 3x for better visibility
 
           if (onAudioLevel) {
             console.log('Sending audio level:', normalizedLevel); // DEBUG
