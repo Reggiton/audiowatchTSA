@@ -1,60 +1,60 @@
-const apiClient = {
-  // Auth methods
+import { storageService } from './storageService';
+
+// Simple auth state management
+let currentUser = null;
+let isAuthenticated = false;
+
+export const api = {
+  entities: {
+    list: async (entityType) => {
+      return storageService.list(entityType);
+    },
+    
+    create: async (entityType, data) => {
+      return storageService.create(entityType, data);
+    },
+    
+    update: async (entityType, id, data) => {
+      return storageService.update(entityType, id, data);
+    },
+    
+    delete: async (entityType, id) => {
+      return storageService.delete(entityType, id);
+    },
+    
+    get: async (entityType, id) => {
+      return storageService.get(entityType, id);
+    }
+  },
+  
   auth: {
     me: async () => {
-      // Get current user from localStorage
-      const storedUser = localStorage.getItem('user')
-      if (!storedUser) {
-        throw new Error('Not authenticated')
+      if (currentUser) {
+        return currentUser;
       }
-      return JSON.parse(storedUser)
+      
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        currentUser = JSON.parse(savedUser);
+        isAuthenticated = true;
+        return currentUser;
+      }
+      
+      throw new Error('Not authenticated');
     },
     
     logout: (redirectUrl) => {
-      localStorage.removeItem('user')
+      currentUser = null;
+      isAuthenticated = false;
+      localStorage.removeItem('currentUser');
+      
       if (redirectUrl) {
-        window.location.href = redirectUrl
+        window.location.href = '/';
       }
     },
     
-    redirectToLogin: (fromUrl) => {
-      // For a standalone app, just redirect to home
-      window.location.href = fromUrl || '/'
-    }
-  },
-  
-  // App logs methods
-  appLogs: {
-    logUserInApp: async (pageName) => {
-      // Optional: Send analytics to your own backend
-      console.log('User navigated to:', pageName)
-      return Promise.resolve()
-    }
-  },
-
-  // Store sound history:
-  sounds: {
-    saveDetection: async (soundData) => {
-  
-      const history = JSON.parse(localStorage.getItem('soundHistory') || '[]')
-      history.unshift({
-        ...soundData,
-        timestamp: new Date().toISOString()
-      })
-      // Kep only last 100 detections
-      localStorage.setItem('soundHistory', JSON.stringify(history.slice(0, 100)))
-      return soundData
-    },
-    
-    getHistory: async () => {
-      return JSON.parse(localStorage.getItem('soundHistory') || '[]')
-    },
-    
-    clearHistory: async () => {
-      localStorage.removeItem('soundHistory')
-      return { success: true }
+    redirectToLogin: (returnUrl) => {
+      window.location.href = '/';
     }
   }
-}
-
-export { apiClient as base44 }
+};
