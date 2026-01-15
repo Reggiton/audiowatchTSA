@@ -205,9 +205,9 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         console.log('🎤 Requesting microphone access...');
         const stream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
+            echoCancellation: false,  // These can reduce volume
+            noiseSuppression: false,
+            autoGainControl: false     // Let's handle gain ourselves
           }
         });
         streamRef.current = stream;
@@ -296,7 +296,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
             sum += normalized * normalized;
           }
           const rms = Math.sqrt(sum / dataArray.length);
-          const normalizedLevel = Math.min(rms * 3, 1); // Amplify by 3x for better visibility
+          const normalizedLevel = Math.min(rms * 20, 1); // Amplify by 20x for quiet mics
 
           // Debug: show raw data sample
           console.log('Raw audio data sample:', dataArray.slice(0, 10), 'RMS:', rms.toFixed(4), 'Normalized:', normalizedLevel.toFixed(4));
