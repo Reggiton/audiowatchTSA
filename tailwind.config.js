@@ -1,14 +1,18 @@
 /** @type {import('tailwindcss').Config} */
+// @config Tailwind CSS configuration
+// Defines theme extensions, color palette, and animations
 module.exports = {
     darkMode: ["class"],
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
   	extend: {
+  		// @borderRadius Custom border radius utilities
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		// @colors Theme color system using CSS variables
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -61,6 +65,7 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
+  		// @keyframes Animation definitions for accordion components
   		keyframes: {
   			'accordion-down': {
   				from: {
@@ -79,6 +84,7 @@ module.exports = {
   				}
   			}
   		},
+  		// @animation Animation utility classes
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
