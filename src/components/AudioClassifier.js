@@ -211,11 +211,15 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
           }
         });
         streamRef.current = stream;
-        console.log('✅ Microphone stream obtained:', stream.getAudioTracks()[0].getSettings());
+        
+        // DEBUG: Test if stream is actually producing audio
+        const track = stream.getAudioTracks()[0];
+        console.log('✅ Microphone stream obtained:', track.getSettings());
+        console.log('   Track state:', track.readyState, 'enabled:', track.enabled, 'muted:', track.muted);
 
-        const audioContext = new AudioContext({ sampleRate: 16000 });
+        const audioContext = new AudioContext(); // Use default sample rate
         audioContextRef.current = audioContext;
-        console.log('✅ AudioContext created, state:', audioContext.state);
+        console.log('✅ AudioContext created, state:', audioContext.state, 'sampleRate:', audioContext.sampleRate);
 
         const source = audioContext.createMediaStreamSource(stream);
         sourceRef.current = source;
