@@ -223,6 +223,7 @@ export default function Home() {
       <AudioClassifier
         isListening={isListening}
         onClassification={handleClassification}
+        onAudioLevel={setAudioLevel}
         enabledSounds={settings?.enabled_sounds || []}
       />
 
