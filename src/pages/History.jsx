@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '../lib/apiClient';
+import { api } from '../lib/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Trash2, Filter, Calendar, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -42,13 +42,13 @@ export default function History() {
 
   const { data: detections = [], isLoading } = useQuery({
     queryKey: ['allDetections'],
-    queryFn: () => base44.entities.DetectedSound.list('-timestamp', 100),
+    queryFn: () => api.entities.DetectedSound.list('-timestamp', 100),
   });
 
   const clearAllMutation = useMutation({
     mutationFn: async () => {
       for (const detection of detections) {
-        await base44.entities.DetectedSound.delete(detection.id);
+        await api.entities.DetectedSound.delete(detection.id);
       }
     },
     onSuccess: () => {
@@ -61,7 +61,7 @@ export default function History() {
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
       for (const detection of detections.filter(d => !d.acknowledged)) {
-        await base44.entities.DetectedSound.update(detection.id, { acknowledged: true });
+        await api.entities.DetectedSound.update(detection.id, { acknowledged: true });
       }
     },
     onSuccess: () => {
