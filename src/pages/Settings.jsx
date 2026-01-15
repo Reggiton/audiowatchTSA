@@ -1,3 +1,9 @@
+/**
+ * Settings Page
+ * Configure flash alerts, vibration settings, detection sensitivity
+ * Manage app preferences and view app information
+ */
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { api } from '../lib/apiClient';
