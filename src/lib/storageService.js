@@ -1,170 +1,70 @@
-// Local storage service to replace entity system
-// Provides simple CRUD operations for app data
+const generateId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
 
-const STORAGE_KEYS = {
-  ONBOARDING_STATUS: 'audiowatch_onboarding',
-  SOUND_SETTINGS: 'audiowatch_settings',
-  DETECTED_SOUNDS: 'audiowatch_detections',
-  SOUND_CORRECTIONS: 'audiowatch_corrections'
-}
-
-// Helper to generate unique IDs
-const generateId = () => `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-// Generic storage operations
-const getItems = (key) => {
-  try {
-    const data = localStorage.getItem(key)
-    return data ? JSON.parse(data) : []
-  } catch (error) {
-    console.error('Error reading from storage:', error)
-    return []
-  }
-}
-
-const setItems = (key, items) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(items))
-    return true
-  } catch (error) {
-    console.error('Error writing to storage:', error)
-    return false
-  }
-}
-
-// Onboarding Status Operations
-export const onboardingStatus = {
-  list: () => {
-    return getItems(STORAGE_KEYS.ONBOARDING_STATUS)
+export const storageService = {
+  list: async (entityType) => {
+    const key = `entities_${entityType}`;
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
   },
-  
-  create: (data) => {
-    const items = getItems(STORAGE_KEYS.ONBOARDING_STATUS)
-    const newItem = {
-      id: generateId(),
-      ...data,
-      created_at: new Date().toISOString()
-    }
-    items.push(newItem)
-    setItems(STORAGE_KEYS.ONBOARDING_STATUS, items)
-    return newItem
-  },
-  
-  update: (id, data) => {
-    const items = getItems(STORAGE_KEYS.ONBOARDING_STATUS)
-    const index = items.findIndex(item => item.id === id)
-    if (index !== -1) {
-      items[index] = { ...items[index], ...data, updated_at: new Date().toISOString() }
-      setItems(STORAGE_KEYS.ONBOARDING_STATUS, items)
-      return items[index]
-    }
-    return null
-  }
-}
 
-// Sound Settings Operations
-export const soundSettings = {
-  list: () => {
-    return getItems(STORAGE_KEYS.SOUND_SETTINGS)
-  },
-  
-  create: (data) => {
-    const items = getItems(STORAGE_KEYS.SOUND_SETTINGS)
-    const newItem = {
-      id: generateId(),
-      ...data,
-      created_at: new Date().toISOString()
-    }
-    items.push(newItem)
-    setItems(STORAGE_KEYS.SOUND_SETTINGS, items)
-    return newItem
-  },
-  
-  update: (id, data) => {
-    const items = getItems(STORAGE_KEYS.SOUND_SETTINGS)
-    const index = items.findIndex(item => item.id === id)
-    if (index !== -1) {
-      items[index] = { ...items[index], ...data, updated_at: new Date().toISOString() }
-      setItems(STORAGE_KEYS.SOUND_SETTINGS, items)
-      return items[index]
-    }
-    return null
-  }
-}
-
-// Detected Sounds Operations
-export const detectedSounds = {
-  list: (sortBy = '-timestamp', limit = null) => {
-    let items = getItems(STORAGE_KEYS.DETECTED_SOUNDS)
+  create: async (entityType, data) => {
+    const key = `entities_${entityType}`;
+    const items = await storageService.list(entityType);
     
-    // Sort by timestamp (descending by default)
-    items.sort((a, b) => {
-      const aTime = new Date(a.timestamp).getTime()
-      const bTime = new Date(b.timestamp).getTime()
-      return sortBy.startsWith('-') ? bTime - aTime : aTime - bTime
-    })
+    const newItem = {
+      ...data,
+      id: data.id || generateId(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
     
-    if (limit) {
-      items = items.slice(0, limit)
+    items.push(newItem);
+    localStorage.setItem(key, JSON.stringify(items));
+    
+    return newItem;
+  },
+
+  update: async (entityType, id, data) => {
+    const key = `entities_${entityType}`;
+    const items = await storageService.list(entityType);
+    
+    const index = items.findIndex(item => item.id === id);
+    if (index === -1) {
+      throw new Error(`Item with id ${id} not found`);
     }
     
-    return items
-  },
-  
-  create: (data) => {
-    const items = getItems(STORAGE_KEYS.DETECTED_SOUNDS)
-    const newItem = {
-      id: generateId(),
+    items[index] = {
+      ...items[index],
       ...data,
-      created_at: new Date().toISOString()
-    }
-    items.push(newItem)
-    setItems(STORAGE_KEYS.DETECTED_SOUNDS, items)
-    return newItem
+      id: items[index].id,
+      updated_at: new Date().toISOString()
+    };
+    
+    localStorage.setItem(key, JSON.stringify(items));
+    
+    return items[index];
   },
-  
-  update: (id, data) => {
-    const items = getItems(STORAGE_KEYS.DETECTED_SOUNDS)
-    const index = items.findIndex(item => item.id === id)
-    if (index !== -1) {
-      items[index] = { ...items[index], ...data, updated_at: new Date().toISOString() }
-      setItems(STORAGE_KEYS.DETECTED_SOUNDS, items)
-      return items[index]
-    }
-    return null
-  },
-  
-  delete: (id) => {
-    const items = getItems(STORAGE_KEYS.DETECTED_SOUNDS)
-    const filtered = items.filter(item => item.id !== id)
-    setItems(STORAGE_KEYS.DETECTED_SOUNDS, filtered)
-    return { success: true, id }
-  }
-}
 
-// Sound Corrections Operations
-export const soundCorrections = {
-  list: () => {
-    return getItems(STORAGE_KEYS.SOUND_CORRECTIONS)
+  delete: async (entityType, id) => {
+    const key = `entities_${entityType}`;
+    const items = await storageService.list(entityType);
+    
+    const filteredItems = items.filter(item => item.id !== id);
+    localStorage.setItem(key, JSON.stringify(filteredItems));
+    
+    return { success: true };
   },
-  
-  create: (data) => {
-    const items = getItems(STORAGE_KEYS.SOUND_CORRECTIONS)
-    const newItem = {
-      id: generateId(),
-      ...data,
-      created_at: new Date().toISOString()
-    }
-    items.push(newItem)
-    setItems(STORAGE_KEYS.SOUND_CORRECTIONS, items)
-    return newItem
-  }
-}
 
-// Export as entities object for easier migration
-export const entities = {
-  OnboardingStatus: onboardingStatus,
-  SoundSettings: soundSettings,
-  DetectedSound: detectedSounds,
-  SoundCorrection: soundCorrections
-}
+  get: async (entityType, id) => {
+    const items = await storageService.list(entityType);
+    const item = items.find(item => item.id === id);
+    
+    if (!item) {
+      throw new Error(`Item with id ${id} not found`);
+    }
+    
+    return item;
+  }
+};
