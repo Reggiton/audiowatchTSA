@@ -1,7 +1,6 @@
 /**
  * API Client
  * localStorage-based data persistence layer
- * Replaces Base44 backend with browser storage
  * Provides CRUD operations for: sound_settings, detected_sounds, 
  * onboarding_status, sound_corrections
  */
