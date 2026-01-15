@@ -22,7 +22,6 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPublicSettings(true)
       setAuthError(null)
       
-      // For a standalone app, we'll use localStorage for simple auth
       const storedUser = localStorage.getItem('user')
       if (storedUser) {
         await checkUserAuth()
