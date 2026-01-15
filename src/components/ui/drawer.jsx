@@ -1,10 +1,11 @@
-"use client"
+"use client" // Client component
 
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 
+// Drawer wrapper
 const Drawer = ({
   shouldScaleBackground = true,
   ...props
@@ -13,12 +14,12 @@ const Drawer = ({
 )
 Drawer.displayName = "Drawer"
 
+// Base drawer parts
 const DrawerTrigger = DrawerPrimitive.Trigger
-
 const DrawerPortal = DrawerPrimitive.Portal
-
 const DrawerClose = DrawerPrimitive.Close
 
+// Background overlay
 const DrawerOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
@@ -27,6 +28,7 @@ const DrawerOverlay = React.forwardRef(({ className, ...props }, ref) => (
 ))
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
+// Drawer content
 const DrawerContent = React.forwardRef(({ className, children, ...props }, ref) => (
   <DrawerPortal>
     <DrawerOverlay />
@@ -37,6 +39,7 @@ const DrawerContent = React.forwardRef(({ className, children, ...props }, ref) 
         className
       )}
       {...props}>
+      {/* Drag handle */}
       <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
       {children}
     </DrawerPrimitive.Content>
@@ -44,6 +47,7 @@ const DrawerContent = React.forwardRef(({ className, children, ...props }, ref) 
 ))
 DrawerContent.displayName = "DrawerContent"
 
+// Header section
 const DrawerHeader = ({
   className,
   ...props
@@ -54,6 +58,7 @@ const DrawerHeader = ({
 )
 DrawerHeader.displayName = "DrawerHeader"
 
+// Footer section
 const DrawerFooter = ({
   className,
   ...props
@@ -62,6 +67,7 @@ const DrawerFooter = ({
 )
 DrawerFooter.displayName = "DrawerFooter"
 
+// Title
 const DrawerTitle = React.forwardRef(({ className, ...props }, ref) => (
   <DrawerPrimitive.Title
     ref={ref}
@@ -70,6 +76,7 @@ const DrawerTitle = React.forwardRef(({ className, ...props }, ref) => (
 ))
 DrawerTitle.displayName = DrawerPrimitive.Title.displayName
 
+// Description
 const DrawerDescription = React.forwardRef(({ className, ...props }, ref) => (
   <DrawerPrimitive.Description
     ref={ref}
@@ -78,6 +85,7 @@ const DrawerDescription = React.forwardRef(({ className, ...props }, ref) => (
 ))
 DrawerDescription.displayName = DrawerPrimitive.Description.displayName
 
+// Exports
 export {
   Drawer,
   DrawerPortal,
