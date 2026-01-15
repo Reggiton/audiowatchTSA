@@ -1,10 +1,15 @@
-"use client"
+"use client" // Client component
 
+// Drag handle icon
 import { GripVertical } from "lucide-react"
+
+// Resizable panel primitives
 import * as ResizablePrimitive from "react-resizable-panels"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Panel group wrapper
 const ResizablePanelGroup = ({
   className,
   ...props
@@ -17,8 +22,10 @@ const ResizablePanelGroup = ({
     {...props} />
 )
 
+// Individual resizable panel
 const ResizablePanel = ResizablePrimitive.Panel
 
+// Resize handle between panels
 const ResizableHandle = ({
   withHandle,
   className,
@@ -39,4 +46,5 @@ const ResizableHandle = ({
   </ResizablePrimitive.PanelResizeHandle>
 )
 
+// Exports
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
