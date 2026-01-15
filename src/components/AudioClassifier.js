@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 // YAMNet class list (521 sounds)
 const YAMNET_CLASSES = [
-  "Speech", "Child speech, kid speaking", "Conversation", "Narration, monologue", 
-  "Babbling", "Speech synthesizer", "Shout", "Bellow", "Whoop", "Yell", 
+  "Speech", "Child speech, kid speaking", "Conversation", "Narration, monologue",
+  "Babbling", "Speech synthesizer", "Shout", "Bellow", "Whoop", "Yell",
   "Children shouting", "Screaming", "Whispering", "Laughter", "Baby laughter",
   "Giggle", "Snicker", "Belly laugh", "Chuckle, chortle", "Crying, sobbing",
   "Baby cry, infant cry", "Whimper", "Wail, moan", "Sigh", "Singing",
@@ -106,155 +106,190 @@ const YAMNET_CLASSES = [
   "Outside, urban or manmade", "Outside, rural or natural", "Reverberation", "Echo", "Noise",
   "Environmental noise", "Static", "Mains hum", "Distortion", "Sidetone",
   "Cacophony", "White noise", "Pink noise", "Throbbing", "Vibration",
-  "Television", "Radio", "Field recording"
+  "Television", "Radio", "Field recording",
 ];
 
 let audioClassifier = null;
 let isInitialized = false;
 
+// Toggle this when debugging (prevents console spam in requestAnimationFrame)
+const DEBUG_AUDIO = false;
+
 const initializeClassifier = async () => {
+  // Prevent re-initializing the model multiple times
   if (isInitialized) return audioClassifier;
-  
+
   try {
+    // Load MediaPipe audio tasks runtime at runtime (client-side)
     const { AudioClassifier, FilesetResolver } = await import(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.0'
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.0"
     );
-    
+
+    // Load WASM binaries for audio tasks
     const audio = await FilesetResolver.forAudioTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.0/wasm'
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.0/wasm"
     );
-    
+
+    // Create the classifier using YAMNet TFLite model
     audioClassifier = await AudioClassifier.createFromOptions(audio, {
       baseOptions: {
-        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/audio_classifier/yamnet/float32/1/yamnet.tflite'
-      }
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-models/audio_classifier/yamnet/float32/1/yamnet.tflite",
+      },
     });
-    
+
     isInitialized = true;
     return audioClassifier;
   } catch (error) {
-    console.error('Failed to initialize audio classifier:', error);
+    console.error("Failed to initialize audio classifier:", error);
     throw error;
   }
 };
 
-export default function AudioClassifier({ onClassification, onAudioLevel, isListening, enabledSounds = [] }) {
+export default function AudioClassifier({
+  onClassification,
+  onAudioLevel,
+  isListening,
+  enabledSounds = [],
+}) {
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState(null);
+
+  // Refs keep audio objects stable across renders without re-creating them
   const audioContextRef = useRef(null);
   const streamRef = useRef(null);
   const scriptNodeRef = useRef(null);
   const analyserRef = useRef(null);
   const sourceRef = useRef(null);
+  const gainRef = useRef(null);
   const animationFrameRef = useRef(null);
+
+  // Ref mirrors isListening so callbacks always see the latest value
   const isListeningRef = useRef(isListening);
 
-  // Keep track of isListening in a ref so callbacks can access the latest value
+  // Keep isListening in sync for privacy-safe early exits inside callbacks
   useEffect(() => {
     isListeningRef.current = isListening;
   }, [isListening]);
 
   useEffect(() => {
-    // Cleanup function to stop everything
+    // Stop everything and free resources (mic + audio graph)
     const cleanup = () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
+
       if (scriptNodeRef.current) {
-        scriptNodeRef.current.onaudioprocess = null; // CRITICAL - stop the callback
+        // Stop the audio callback immediately
+        scriptNodeRef.current.onaudioprocess = null;
         scriptNodeRef.current.disconnect();
         scriptNodeRef.current = null;
       }
+
       if (analyserRef.current) {
         analyserRef.current.disconnect();
         analyserRef.current = null;
       }
+
       if (sourceRef.current) {
         sourceRef.current.disconnect();
         sourceRef.current = null;
       }
+
+      if (gainRef.current) {
+        gainRef.current.disconnect();
+        gainRef.current = null;
+      }
+
       if (audioContextRef.current) {
         audioContextRef.current.close();
         audioContextRef.current = null;
       }
+
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
       }
-      if (onAudioLevel) {
-        onAudioLevel(0);
-      }
+
+      if (onAudioLevel) onAudioLevel(0);
     };
 
-    // If not listening, cleanup immediately and return
+    // If listening is off, tear everything down immediately
     if (!isListening) {
       cleanup();
       return;
     }
 
     const setup = async () => {
+      // Bail if user toggled off while setup is still starting
       if (!isListeningRef.current) return;
-      
+
       setIsInitializing(true);
       setError(null);
 
       try {
+        // Ensure model is loaded once
         await initializeClassifier();
 
-        console.log('🎤 Requesting microphone access...');
-        const stream = await navigator.mediaDevices.getUserMedia({ 
+        // Request microphone stream
+        const stream = await navigator.mediaDevices.getUserMedia({
           audio: {
-            echoCancellation: false,  // These can reduce volume
+            echoCancellation: false,
             noiseSuppression: false,
-            autoGainControl: false     // Let's handle gain ourselves
-          }
+            autoGainControl: false,
+          },
         });
         streamRef.current = stream;
-        
-        // DEBUG: Test if stream is actually producing audio
-        const track = stream.getAudioTracks()[0];
-        console.log('✅ Microphone stream obtained:', track.getSettings());
-        console.log('   Track state:', track.readyState, 'enabled:', track.enabled, 'muted:', track.muted);
 
-        const audioContext = new AudioContext(); // Use default sample rate
+        // Create AudioContext (browser default sampleRate)
+        const audioContext = new AudioContext();
         audioContextRef.current = audioContext;
-        console.log('✅ AudioContext created, state:', audioContext.state, 'sampleRate:', audioContext.sampleRate);
 
+        // Convert mic stream into audio node
         const source = audioContext.createMediaStreamSource(stream);
         sourceRef.current = source;
-        console.log('✅ MediaStreamSource created');
 
-        // Create analyser for audio level visualization
+        // Analyser for audio-level meter
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 2048;
         analyserRef.current = analyser;
-        console.log('✅ Analyser created, fftSize:', analyser.fftSize);
 
+        // ScriptProcessor gives you raw audio buffers (deprecated but still works)
+        // Buffer size affects latency and callback frequency
         const scriptNode = audioContext.createScriptProcessor(16384, 1, 1);
         scriptNodeRef.current = scriptNode;
-        console.log('✅ ScriptProcessor created');
 
+        // Gain node set to 0 so connecting to destination doesn't create audible output
+        const gain = audioContext.createGain();
+        gain.gain.value = 0;
+        gainRef.current = gain;
+
+        // Classification callback (runs many times per second)
         scriptNode.onaudioprocess = (audioProcessingEvent) => {
-          // Check if still listening - CRITICAL for privacy
+          // Privacy + safety: do nothing if stopped
           if (!isListeningRef.current || !audioClassifier) return;
 
           const inputBuffer = audioProcessingEvent.inputBuffer;
           const inputData = inputBuffer.getChannelData(0);
 
           try {
+            // Run model on current audio chunk
             const results = audioClassifier.classify(inputData);
-            
+
             if (results && results.length > 0) {
               const classifications = results[0].classifications[0].categories;
-              
-              const topPredictions = classifications.slice(0, 3).map(cat => ({
+
+              // Grab top 3 predictions
+              const topPredictions = classifications.slice(0, 3).map((cat) => ({
                 label: cat.categoryName,
-                confidence: cat.score
+                confidence: cat.score,
               }));
 
-              const detectedSound = topPredictions.find(pred => 
-                pred.confidence > 0.5 && enabledSounds.includes(pred.label)
+              // Only trigger detectedSound when enabled + above confidence threshold
+              const detectedSound = topPredictions.find(
+                (pred) =>
+                  pred.confidence > 0.5 && enabledSounds.includes(pred.label)
               );
 
               if (onClassification) {
@@ -262,58 +297,63 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
                   predictions: topPredictions,
                   detectedSound: detectedSound ? detectedSound.label : null,
                   confidence: detectedSound ? detectedSound.confidence : 0,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
                 });
               }
             }
           } catch (classifyError) {
-            console.error('Classification error:', classifyError);
+            console.error("Classification error:", classifyError);
           }
         };
 
-        // Connect audio pipeline
-        // FIX: Analyser must be in the signal chain to receive data
+        // Audio graph: source -> analyser -> scriptNode -> gain(0) -> destination
         source.connect(analyser);
         analyser.connect(scriptNode);
-        scriptNode.connect(audioContext.destination);
-        console.log('✅ Audio pipeline connected: source -> analyser -> scriptNode -> destination');
+        scriptNode.connect(gain);
+        gain.connect(audioContext.destination);
 
-        // Start audio level monitoring
+        // Audio level meter loop (requestAnimationFrame)
         const updateAudioLevel = () => {
-          // Check if still listening - CRITICAL for privacy
+          // Stop if not listening
           if (!analyserRef.current || !isListeningRef.current) {
             if (onAudioLevel) onAudioLevel(0);
             return;
           }
 
+          // Time-domain audio samples (0..255)
           const dataArray = new Uint8Array(analyserRef.current.fftSize);
           analyserRef.current.getByteTimeDomainData(dataArray);
 
-          // Calculate RMS (Root Mean Square) for better audio level
+          // RMS gives a stable loudness measure
           let sum = 0;
           for (let i = 0; i < dataArray.length; i++) {
             const normalized = (dataArray[i] - 128) / 128;
             sum += normalized * normalized;
           }
           const rms = Math.sqrt(sum / dataArray.length);
-          const normalizedLevel = Math.min(rms * 20, 1); // Amplify by 20x for quiet mics
 
-          // Debug: show raw data sample
-          console.log('Raw audio data sample:', dataArray.slice(0, 10), 'RMS:', rms.toFixed(4), 'Normalized:', normalizedLevel.toFixed(4));
+          // Map RMS into 0..1 range (tweak multiplier for sensitivity)
+          const normalizedLevel = Math.min(rms * 20, 1);
 
-          if (onAudioLevel) {
-            onAudioLevel(normalizedLevel);
+          if (DEBUG_AUDIO) {
+            console.log(
+              "RMS:",
+              rms.toFixed(4),
+              "Level:",
+              normalizedLevel.toFixed(4)
+            );
           }
+
+          if (onAudioLevel) onAudioLevel(normalizedLevel);
 
           animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         };
-        updateAudioLevel();
-        console.log('✅ Audio level monitoring started');
 
+        updateAudioLevel();
         setIsInitializing(false);
       } catch (err) {
-        console.error('❌ Setup error:', err);
-        setError(err.message);
+        console.error("Setup error:", err);
+        setError(err?.message || "Unknown error");
         setIsInitializing(false);
         cleanup();
       }
@@ -321,10 +361,13 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
 
     setup();
 
+    // Cleanup on unmount / dependency change / stop listening
     return cleanup;
   }, [isListening, onClassification, onAudioLevel, enabledSounds]);
 
+  // Component renders nothing; it only manages audio + callbacks
   return null;
 }
 
+// Expose the full class list for your settings UI
 AudioClassifier.getAllClasses = () => YAMNET_CLASSES;
