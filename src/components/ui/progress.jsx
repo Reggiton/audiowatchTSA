@@ -1,10 +1,15 @@
-"use client"
+"use client" // Client component
 
+// React import
 import * as React from "react"
+
+// Radix progress primitive
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Progress bar component
 const Progress = React.forwardRef(({ className, value, ...props }, ref) => (
   <ProgressPrimitive.Root
     ref={ref}
@@ -20,4 +25,5 @@ const Progress = React.forwardRef(({ className, value, ...props }, ref) => (
 ))
 Progress.displayName = ProgressPrimitive.Root.displayName
 
+// Export
 export { Progress }
