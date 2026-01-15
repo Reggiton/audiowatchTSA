@@ -1,9 +1,16 @@
+// React import
 import * as React from "react"
+
+// OTP input components
 import { OTPInput, OTPInputContext } from "input-otp"
+
+// Separator icon
 import { Minus } from "lucide-react"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Main OTP input
 const InputOTP = React.forwardRef(({ className, containerClassName, ...props }, ref) => (
   <OTPInput
     ref={ref}
@@ -13,11 +20,13 @@ const InputOTP = React.forwardRef(({ className, containerClassName, ...props }, 
 ))
 InputOTP.displayName = "InputOTP"
 
+// Group wrapper
 const InputOTPGroup = React.forwardRef(({ className, ...props }, ref) => (
   <div ref={ref} className={cn("flex items-center", className)} {...props} />
 ))
 InputOTPGroup.displayName = "InputOTPGroup"
 
+// Individual OTP slot
 const InputOTPSlot = React.forwardRef(({ index, className, ...props }, ref) => {
   const inputOTPContext = React.useContext(OTPInputContext)
   const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
@@ -43,6 +52,7 @@ const InputOTPSlot = React.forwardRef(({ index, className, ...props }, ref) => {
 })
 InputOTPSlot.displayName = "InputOTPSlot"
 
+// Separator between OTP groups
 const InputOTPSeparator = React.forwardRef(({ ...props }, ref) => (
   <div ref={ref} role="separator" {...props}>
     <Minus />
@@ -50,4 +60,5 @@ const InputOTPSeparator = React.forwardRef(({ ...props }, ref) => (
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"
 
+// Exports
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator }
