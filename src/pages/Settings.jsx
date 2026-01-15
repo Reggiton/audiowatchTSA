@@ -17,10 +17,10 @@ export default function Settings() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['soundSettings'],
     queryFn: async () => {
-      const allSettings = await api.entities.SoundSettings.list();
+      const allSettings = await api.entities.list('sound_settings');
       if (allSettings.length === 0) {
-        return await api.entities.SoundSettings.create({
-          enabled_sounds: ['alarm', 'doorbell', 'baby_crying', 'smoke_alarm', 'siren'],
+        return await api.entities.create('sound_settings', {
+          enabled_sounds: ['Speech', 'Dog', 'Alarm', 'Doorbell', 'Baby cry, infant cry'],
           vibration_strength: 'medium',
           flash_alerts: true,
           sensitivity: 'medium',
@@ -31,8 +31,10 @@ export default function Settings() {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: ({ id, data }) => api.entities.SoundSettings.update(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['soundSettings'] }),
+    mutationFn: ({ id, data }) => api.entities.update('sound_settings', id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['soundSettings'] });
+    },
   });
 
   const updateSetting = (key, value) => {
@@ -90,6 +92,7 @@ export default function Settings() {
                 checked={settings?.flash_alerts ?? true}
                 onCheckedChange={(checked) => updateSetting('flash_alerts', checked)}
                 className="data-[state=checked]:bg-violet-600"
+                disabled={isLoading || !settings}
               />
             </div>
 
@@ -104,9 +107,10 @@ export default function Settings() {
                 </div>
               </div>
               <Switch 
-                checked={true}
-                onCheckedChange={() => {}}
+                checked={settings?.vibration_enabled ?? true}
+                onCheckedChange={(checked) => updateSetting('vibration_enabled', checked)}
                 className="data-[state=checked]:bg-violet-600"
+                disabled={isLoading || !settings}
               />
             </div>
           </div>
@@ -133,6 +137,7 @@ export default function Settings() {
                 onValueChange={([value]) => {
                   const strength = value <= 33 ? 'light' : value <= 66 ? 'medium' : 'strong';
                   updateSetting('vibration_strength', strength);
+                  // Haptic feedback
                   if (navigator.vibrate) {
                     const duration = strength === 'light' ? 50 : strength === 'medium' ? 150 : 300;
                     navigator.vibrate(duration);
@@ -141,6 +146,7 @@ export default function Settings() {
                 max={100}
                 step={33}
                 className="[&_[role=slider]]:bg-violet-500"
+                disabled={isLoading || !settings}
               />
               <div className="flex justify-between mt-2 text-xs text-slate-500">
                 <span>Light</span>
@@ -168,6 +174,7 @@ export default function Settings() {
                 max={100}
                 step={33}
                 className="[&_[role=slider]]:bg-emerald-500"
+                disabled={isLoading || !settings}
               />
               <div className="flex justify-between mt-2 text-xs text-slate-500">
                 <span>Low</span>
