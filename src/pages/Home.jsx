@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '../lib/apiClient';
+import { api } from '../lib/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings, History, Zap, Shield, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -37,9 +37,9 @@ export default function Home() {
   const { data: onboardingStatus } = useQuery({
     queryKey: ['onboardingStatus'],
     queryFn: async () => {
-      const statuses = await base44.entities.OnboardingStatus.list();
+      const statuses = await api.entities.OnboardingStatus.list();
       if (statuses.length === 0) {
-        const newStatus = await base44.entities.OnboardingStatus.create({
+        const newStatus = await api.entities.OnboardingStatus.create({
           completed: false,
           step: 0,
           skipped: false
@@ -58,7 +58,7 @@ export default function Home() {
   const { data: settings } = useQuery({
     queryKey: ['soundSettings'],
     queryFn: async () => {
-      const allSettings = await base44.entities.SoundSettings.list();
+      const allSettings = await api.entities.SoundSettings.list();
       if (allSettings.length === 0) {
         const defaultSettings = {
           enabled_sounds: ['Speech', 'Dog', 'Alarm', 'Doorbell', 'Baby cry, infant cry'],
@@ -66,7 +66,7 @@ export default function Home() {
           flash_alerts: true,
           sensitivity: 'medium',
         };
-        return await base44.entities.SoundSettings.create(defaultSettings);
+        return await api.entities.SoundSettings.create(defaultSettings);
       }
       return allSettings[0];
     },
@@ -74,16 +74,16 @@ export default function Home() {
 
   const { data: corrections = [] } = useQuery({
     queryKey: ['soundCorrections'],
-    queryFn: () => base44.entities.SoundCorrection.list(),
+    queryFn: () => api.entities.SoundCorrection.list(),
   });
 
   const { data: recentDetections = [] } = useQuery({
     queryKey: ['recentDetections'],
-    queryFn: () => base44.entities.DetectedSound.list('-timestamp', 5),
+    queryFn: () => api.entities.DetectedSound.list('-timestamp', 5),
   });
 
   const createDetectionMutation = useMutation({
-    mutationFn: (data) => base44.entities.DetectedSound.create(data),
+    mutationFn: (data) => api.entities.DetectedSound.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recentDetections'] }),
   });
 
@@ -254,7 +254,7 @@ export default function Home() {
         d.timestamp === currentAlert.timestamp
       );
       if (detection) {
-        await base44.entities.DetectedSound.update(detection.id, { acknowledged: true });
+        await api.entities.DetectedSound.update(detection.id, { acknowledged: true });
         queryClient.invalidateQueries({ queryKey: ['recentDetections'] });
       }
     }
@@ -270,7 +270,7 @@ export default function Home() {
   const saveCorrection = async (correctedType) => {
     if (!detectionToCorrect) return;
     
-    await base44.entities.SoundCorrection.create({
+    await api.entities.SoundCorrection.create({
       original_sound_type: detectionToCorrect.sound_type,
       corrected_sound_type: correctedType,
       yamnet_class: detectionToCorrect.rawClass || detectionToCorrect.sound_type,
@@ -284,7 +284,7 @@ export default function Home() {
 
   const completeOnboarding = async () => {
     if (onboardingStatus) {
-      await base44.entities.OnboardingStatus.update(onboardingStatus.id, {
+      await api.entities.OnboardingStatus.update(onboardingStatus.id, {
         completed: true,
         step: 4
       });
@@ -295,7 +295,7 @@ export default function Home() {
 
   const skipOnboarding = async () => {
     if (onboardingStatus) {
-      await base44.entities.OnboardingStatus.update(onboardingStatus.id, {
+      await api.entities.OnboardingStatus.update(onboardingStatus.id, {
         skipped: true
       });
       queryClient.invalidateQueries({ queryKey: ['onboardingStatus'] });
