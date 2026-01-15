@@ -1,18 +1,10 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Switch } from "@/components/ui/switch";
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Switch } from '@/components/ui/switch';
 import {
-  Bell,
-  Baby,
-  Car,
-  Dog,
-  AlertTriangle,
-  Phone,
-  Volume2,
-  Siren,
-  Hand,
-  Flame,
-} from "lucide-react";
+  Bell, Baby, Car, Dog, AlertTriangle,
+  Phone, Volume2, Siren, Hand, Flame
+} from 'lucide-react';
 
 const soundIcons = {
   alarm: AlertTriangle,
@@ -28,74 +20,71 @@ const soundIcons = {
 };
 
 const soundLabels = {
-  alarm: "Alarm",
-  doorbell: "Doorbell",
-  baby_crying: "Baby Crying",
-  car_horn: "Car Horn",
-  dog_barking: "Dog Barking",
-  glass_breaking: "Glass Breaking",
-  smoke_alarm: "Smoke Alarm",
-  phone_ringing: "Phone Ringing",
-  knock: "Door Knock",
-  siren: "Emergency Siren",
+  alarm: 'Alarm',
+  doorbell: 'Doorbell',
+  baby_crying: 'Baby Crying',
+  car_horn: 'Car Horn',
+  dog_barking: 'Dog Barking',
+  glass_breaking: 'Glass Breaking',
+  smoke_alarm: 'Smoke Alarm',
+  phone_ringing: 'Phone Ringing',
+  knock: 'Door Knock',
+  siren: 'Emergency Siren',
 };
 
 const soundColors = {
-  alarm: "from-amber-500 to-orange-600",
-  doorbell: "from-blue-500 to-cyan-600",
-  baby_crying: "from-pink-500 to-rose-600",
-  car_horn: "from-yellow-500 to-amber-600",
-  dog_barking: "from-emerald-500 to-green-600",
-  glass_breaking: "from-red-500 to-rose-600",
-  smoke_alarm: "from-red-600 to-orange-600",
-  phone_ringing: "from-violet-500 to-purple-600",
-  knock: "from-slate-500 to-slate-600",
-  siren: "from-red-500 to-pink-600",
+  // Tailwind gradient classes for each sound type
+  alarm: 'from-amber-500 to-orange-600',
+  doorbell: 'from-blue-500 to-cyan-600',
+  baby_crying: 'from-pink-500 to-rose-600',
+  car_horn: 'from-yellow-500 to-amber-600',
+  dog_barking: 'from-emerald-500 to-green-600',
+  glass_breaking: 'from-red-500 to-rose-600',
+  smoke_alarm: 'from-red-600 to-orange-600',
+  phone_ringing: 'from-violet-500 to-purple-600',
+  knock: 'from-slate-500 to-slate-600',
+  siren: 'from-red-500 to-pink-600',
 };
 
 export default function SoundCard({ soundType, enabled, onToggle }) {
-  // Icon to show for this sound type
+  // Pick the icon (fallback to Volume2 if unknown)
   const Icon = soundIcons[soundType] || Volume2;
-  // Human-friendly name to show
+  // Pick the label (fallback to the raw soundType)
   const label = soundLabels[soundType] || soundType;
-  // Gradient used when enabled
-  const gradient = soundColors[soundType] || "from-slate-500 to-slate-600";
+  // Pick the gradient (fallback to gray)
+  const gradient = soundColors[soundType] || 'from-slate-500 to-slate-600';
 
   return (
     <motion.div
-      // Card container (dimmer when disabled)
+      // Card styling changes based on enabled/disabled
       className={`relative overflow-hidden rounded-2xl p-4 ${
         enabled
-          ? "bg-slate-800/80 border border-slate-700"
-          : "bg-slate-900/50 border border-slate-800/50"
+          ? 'bg-slate-800/80 border border-slate-700'
+          : 'bg-slate-900/50 border border-slate-800/50'
       }`}
-      // Tiny interaction animations
+      // Small hover/tap animations
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       layout
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          {/* Icon badge */}
+          {/* Icon bubble */}
           <div
             className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${
-              enabled ? gradient : "from-slate-700 to-slate-800"
+              enabled ? gradient : 'from-slate-700 to-slate-800'
             }`}
           >
-            <Icon
-              className={`w-5 h-5 ${enabled ? "text-white" : "text-slate-500"}`}
-            />
+            <Icon className={`w-5 h-5 ${enabled ? 'text-white' : 'text-slate-500'}`} />
           </div>
 
-          {/* Label */}
-          <span
-            className={`font-medium ${enabled ? "text-white" : "text-slate-500"}`}
-          >
+          {/* Sound name */}
+          <span className={`font-medium ${enabled ? 'text-white' : 'text-slate-500'}`}>
             {label}
           </span>
         </div>
 
-        {/* Toggle switch */}
+        {/* Toggle switch for enabling/disabling this sound */}
         <Switch
           checked={enabled}
           onCheckedChange={onToggle}
