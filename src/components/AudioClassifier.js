@@ -116,7 +116,6 @@ const initializeClassifier = async () => {
   if (isInitialized) return audioClassifier;
   
   try {
-    // Import MediaPipe Audio tasks
     const { AudioClassifier, FilesetResolver } = await import(
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.0'
     );
@@ -139,13 +138,15 @@ const initializeClassifier = async () => {
   }
 };
 
-export default function AudioClassifier({ onClassification, isListening, enabledSounds = [] }) {
+export default function AudioClassifier({ onClassification, onAudioLevel, isListening, enabledSounds = [] }) {
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState(null);
   const audioContextRef = useRef(null);
   const streamRef = useRef(null);
   const scriptNodeRef = useRef(null);
+  const analyserRef = useRef(null);
   const sourceRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
   useEffect(() => {
     const setup = async () => {
@@ -155,10 +156,8 @@ export default function AudioClassifier({ onClassification, isListening, enabled
       setError(null);
 
       try {
-        // Initialize classifier
         await initializeClassifier();
 
-        // Request microphone access
         const stream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
             echoCancellation: true,
@@ -168,15 +167,17 @@ export default function AudioClassifier({ onClassification, isListening, enabled
         });
         streamRef.current = stream;
 
-        // Create AudioContext with 16kHz sample rate (YAMNet requirement)
         const audioContext = new AudioContext({ sampleRate: 16000 });
         audioContextRef.current = audioContext;
 
-        // Create audio processing pipeline
         const source = audioContext.createMediaStreamSource(stream);
         sourceRef.current = source;
 
-        // Create script processor (16384 samples buffer)
+        // Create analyser for audio level visualization
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        analyserRef.current = analyser;
+
         const scriptNode = audioContext.createScriptProcessor(16384, 1, 1);
         scriptNodeRef.current = scriptNode;
 
@@ -187,24 +188,20 @@ export default function AudioClassifier({ onClassification, isListening, enabled
           const inputData = inputBuffer.getChannelData(0);
 
           try {
-            // Classify audio
             const results = audioClassifier.classify(inputData);
             
             if (results && results.length > 0) {
               const classifications = results[0].classifications[0].categories;
               
-              // Get top 3 predictions
               const topPredictions = classifications.slice(0, 3).map(cat => ({
                 label: cat.categoryName,
                 confidence: cat.score
               }));
 
-              // Check if any enabled sounds are detected with high confidence
               const detectedSound = topPredictions.find(pred => 
                 pred.confidence > 0.5 && enabledSounds.includes(pred.label)
               );
 
-              // Call callback with classification results
               if (onClassification) {
                 onClassification({
                   predictions: topPredictions,
@@ -220,8 +217,27 @@ export default function AudioClassifier({ onClassification, isListening, enabled
         };
 
         // Connect audio pipeline
+        source.connect(analyser);
         source.connect(scriptNode);
         scriptNode.connect(audioContext.destination);
+
+        // Start audio level monitoring
+        const updateAudioLevel = () => {
+          if (!analyserRef.current || !isListening) return;
+
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+
+          const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const normalizedLevel = Math.min(average / 128, 1);
+
+          if (onAudioLevel) {
+            onAudioLevel(normalizedLevel);
+          }
+
+          animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
+        };
+        updateAudioLevel();
 
         setIsInitializing(false);
       } catch (err) {
@@ -232,10 +248,19 @@ export default function AudioClassifier({ onClassification, isListening, enabled
     };
 
     const cleanup = () => {
-      // Stop audio processing
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+
       if (scriptNodeRef.current) {
         scriptNodeRef.current.disconnect();
         scriptNodeRef.current = null;
+      }
+
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+        analyserRef.current = null;
       }
 
       if (sourceRef.current) {
@@ -248,10 +273,13 @@ export default function AudioClassifier({ onClassification, isListening, enabled
         audioContextRef.current = null;
       }
 
-      // Stop microphone stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
+      }
+
+      if (onAudioLevel) {
+        onAudioLevel(0);
       }
     };
 
@@ -260,11 +288,9 @@ export default function AudioClassifier({ onClassification, isListening, enabled
     }
 
     return cleanup;
-  }, [isListening, onClassification, enabledSounds]);
+  }, [isListening, onClassification, onAudioLevel, enabledSounds]);
 
-  // This component doesn't render anything
   return null;
 }
 
-// Export static method to get all available classes
 AudioClassifier.getAllClasses = () => YAMNET_CLASSES;
