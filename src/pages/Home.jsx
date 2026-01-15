@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Settings, History, Zap, Shield, Mic } from 'lucide-react';
+import { Settings, History, Zap, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '../utils';
 import ListeningIndicator from '../components/ListeningIndicator';
@@ -10,13 +10,11 @@ import AlertBanner from '../components/AlertBanner';
 import AudioClassifier from '../components/AudioClassifier';
 import OnboardingFlow from '../components/onboarding/OnboardingFlow';
 import SoundCorrectionDialog from '../components/SoundCorrectionDialog';
-import AudioVisualization from '../components/AudioVisualization';
 
 export default function Home() {
   const [isListening, setIsListening] = useState(() => {
     return localStorage.getItem('audiowatch_listening') === 'true';
   });
-  const [audioLevel, setAudioLevel] = useState(0);
   const [currentAlert, setCurrentAlert] = useState(null);
   const [permissionStatus, setPermissionStatus] = useState('prompt');
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -92,7 +90,12 @@ export default function Home() {
   };
 
   const handleClassification = useCallback((result) => {
-    if (!result) return;
+    if (!result) {
+      // Clear detection display when no results
+      setDetectionProbability(0);
+      setCurrentDetectedSound(null);
+      return;
+    }
 
     // Update audio visualization
     const topPrediction = result.predictions[0];
@@ -141,7 +144,6 @@ export default function Home() {
     if (isListening) {
       setIsListening(false);
       localStorage.setItem('audiowatch_listening', 'false');
-      setAudioLevel(0);
       setDetectionProbability(0);
       setCurrentDetectedSound(null);
     } else {
@@ -223,7 +225,6 @@ export default function Home() {
       <AudioClassifier
         isListening={isListening}
         onClassification={handleClassification}
-        onAudioLevel={setAudioLevel}
         enabledSounds={settings?.enabled_sounds || []}
       />
 
@@ -285,15 +286,22 @@ export default function Home() {
         >
           <div className="flex flex-col items-center mb-8 pt-4">
             <button onClick={toggleListening} className="mb-8">
-              <ListeningIndicator isListening={isListening} audioLevel={audioLevel} />
+              <ListeningIndicator isListening={isListening} />
             </button>
 
-            <AudioVisualization 
-              audioLevel={audioLevel}
-              detectionProbability={detectionProbability}
-              isListening={isListening}
-              detectedSound={currentDetectedSound}
-            />
+            {/* Detection Display */}
+            {isListening && currentDetectedSound && detectionProbability > 10 && (
+              <motion.div
+                className="text-center mb-4"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                <p className="text-sm text-slate-400 mb-1">Detecting:</p>
+                <p className="text-xl font-semibold text-violet-400">{currentDetectedSound}</p>
+                <p className="text-sm text-slate-500">{Math.floor(detectionProbability)}% confidence</p>
+              </motion.div>
+            )}
           </div>
           
           <div className="flex items-center justify-center gap-6 text-center">
@@ -308,20 +316,6 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
-
-        {permissionStatus === 'denied' && (
-          <motion.div
-            className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-6 flex items-start gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            <Mic className="w-5 h-5 text-red-400 mt-0.5" />
-            <div>
-              <p className="font-medium text-red-400">Microphone Access Required</p>
-              <p className="text-sm text-red-400/70">Please enable microphone access in your browser settings to detect sounds.</p>
-            </div>
-          </motion.div>
-        )}
 
         <div className="grid grid-cols-2 gap-4 mb-8">
           <Link to={createPageUrl('SoundLibrary')}>
