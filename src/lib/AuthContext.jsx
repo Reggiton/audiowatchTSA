@@ -1,27 +1,40 @@
+/**
+ * Auth Context (Simplified)
+ * Minimal authentication context using localStorage
+ * Placeholder for future authentication features - currently no actual auth required
+ */
+
 import React, { createContext, useState, useContext, useEffect } from 'react'
 
+// Create authentication context
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
+  // User authentication state
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoadingAuth, setIsLoadingAuth] = useState(false)
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false)
   const [authError, setAuthError] = useState(null)
+  
+  // App configuration settings
   const [appPublicSettings, setAppPublicSettings] = useState({
     id: 'audiowatch',
     public_settings: {}
   })
 
+  // Check authentication state on mount
   useEffect(() => {
     checkAppState()
   }, [])
 
+  // Verify app state and user authentication on initialization
   const checkAppState = async () => {
     try {
       setIsLoadingPublicSettings(true)
       setAuthError(null)
       
+      // Check if user data exists in localStorage
       const storedUser = localStorage.getItem('user')
       if (storedUser) {
         await checkUserAuth()
@@ -42,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Validate user authentication from localStorage
   const checkUserAuth = async () => {
     try {
       setIsLoadingAuth(true)
@@ -62,6 +76,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Store user data and mark as authenticated
   const login = (userData) => {
     // Simple login function - stores user in localStorage
     localStorage.setItem('user', JSON.stringify(userData))
@@ -69,6 +84,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true)
   }
 
+  // Clear user data and authentication state
   const logout = (shouldRedirect = false) => {
     localStorage.removeItem('user')
     setUser(null)
@@ -79,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Redirect to login/home page
   const navigateToLogin = () => {
     // For standalone app, just redirect to home
     window.location.href = '/'
@@ -102,6 +119,7 @@ export const AuthProvider = ({ children }) => {
   )
 }
 
+// Hook to access authentication context
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
