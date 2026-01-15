@@ -202,6 +202,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
       try {
         await initializeClassifier();
 
+        console.log('🎤 Requesting microphone access...');
         const stream = await navigator.mediaDevices.getUserMedia({ 
           audio: {
             echoCancellation: true,
@@ -210,20 +211,25 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
           }
         });
         streamRef.current = stream;
+        console.log('✅ Microphone stream obtained:', stream.getAudioTracks()[0].getSettings());
 
         const audioContext = new AudioContext({ sampleRate: 16000 });
         audioContextRef.current = audioContext;
+        console.log('✅ AudioContext created, state:', audioContext.state);
 
         const source = audioContext.createMediaStreamSource(stream);
         sourceRef.current = source;
+        console.log('✅ MediaStreamSource created');
 
         // Create analyser for audio level visualization
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 2048;
         analyserRef.current = analyser;
+        console.log('✅ Analyser created, fftSize:', analyser.fftSize);
 
         const scriptNode = audioContext.createScriptProcessor(16384, 1, 1);
         scriptNodeRef.current = scriptNode;
+        console.log('✅ ScriptProcessor created');
 
         scriptNode.onaudioprocess = (audioProcessingEvent) => {
           // Check if still listening - CRITICAL for privacy
@@ -266,6 +272,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         source.connect(scriptNode);
         source.connect(analyser);
         scriptNode.connect(audioContext.destination);
+        console.log('✅ Audio pipeline connected');
 
         // Start audio level monitoring
         const updateAudioLevel = () => {
@@ -285,20 +292,23 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
             sum += normalized * normalized;
           }
           const rms = Math.sqrt(sum / dataArray.length);
-          const normalizedLevel = Math.min(rms * 300, 1); // Amplify by 3x for better visibility
+          const normalizedLevel = Math.min(rms * 3, 1); // Amplify by 3x for better visibility
+
+          // Debug: show raw data sample
+          console.log('Raw audio data sample:', dataArray.slice(0, 10), 'RMS:', rms.toFixed(4), 'Normalized:', normalizedLevel.toFixed(4));
 
           if (onAudioLevel) {
-            console.log('Sending audio level:', normalizedLevel); // DEBUG
             onAudioLevel(normalizedLevel);
           }
 
           animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         };
         updateAudioLevel();
+        console.log('✅ Audio level monitoring started');
 
         setIsInitializing(false);
       } catch (err) {
-        console.error('Setup error:', err);
+        console.error('❌ Setup error:', err);
         setError(err.message);
         setIsInitializing(false);
         cleanup();
