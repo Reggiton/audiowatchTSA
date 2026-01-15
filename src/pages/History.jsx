@@ -1,3 +1,9 @@
+/**
+ * History Page
+ * View complete detection history with filtering and acknowledgment
+ * Shows all past sound detections with timestamps and confidence levels
+ */
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/apiClient';
