@@ -147,6 +147,12 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
   const analyserRef = useRef(null);
   const sourceRef = useRef(null);
   const animationFrameRef = useRef(null);
+  const isListeningRef = useRef(isListening);
+
+  // Keep track of isListening in a ref so callbacks can access the latest value
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
 
   useEffect(() => {
     // Cleanup function to stop everything
@@ -156,7 +162,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         animationFrameRef.current = null;
       }
       if (scriptNodeRef.current) {
-        scriptNodeRef.current.onaudioprocess = null; // IMPORTANT - stop the callback
+        scriptNodeRef.current.onaudioprocess = null; // CRITICAL - stop the callback
         scriptNodeRef.current.disconnect();
         scriptNodeRef.current = null;
       }
@@ -181,13 +187,14 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
       }
     };
 
-    // If not listening, just return cleanup function
+    // If not listening, cleanup immediately and return
     if (!isListening) {
-      return cleanup;
+      cleanup();
+      return;
     }
 
     const setup = async () => {
-      if (!isListening) return;
+      if (!isListeningRef.current) return;
       
       setIsInitializing(true);
       setError(null);
@@ -219,7 +226,8 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         scriptNodeRef.current = scriptNode;
 
         scriptNode.onaudioprocess = (audioProcessingEvent) => {
-          if (!audioClassifier) return;
+          // Check if still listening - CRITICAL for privacy
+          if (!isListeningRef.current || !audioClassifier) return;
 
           const inputBuffer = audioProcessingEvent.inputBuffer;
           const inputData = inputBuffer.getChannelData(0);
@@ -260,7 +268,11 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
 
         // Start audio level monitoring
         const updateAudioLevel = () => {
-          if (!analyserRef.current || !isListening) return;
+          // Check if still listening - CRITICAL for privacy
+          if (!analyserRef.current || !isListeningRef.current) {
+            if (onAudioLevel) onAudioLevel(0);
+            return;
+          }
 
           const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
           analyserRef.current.getByteFrequencyData(dataArray);
@@ -281,6 +293,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
         console.error('Setup error:', err);
         setError(err.message);
         setIsInitializing(false);
+        cleanup();
       }
     };
 
