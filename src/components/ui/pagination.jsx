@@ -1,9 +1,16 @@
+// React import
 import * as React from "react"
+
+// Icons
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
+
+// Button styles
 import { buttonVariants } from "@/components/ui/button";
 
+// Pagination wrapper
 const Pagination = ({
   className,
   ...props
@@ -16,6 +23,7 @@ const Pagination = ({
 )
 Pagination.displayName = "Pagination"
 
+// Pagination list
 const PaginationContent = React.forwardRef(({ className, ...props }, ref) => (
   <ul
     ref={ref}
@@ -24,11 +32,13 @@ const PaginationContent = React.forwardRef(({ className, ...props }, ref) => (
 ))
 PaginationContent.displayName = "PaginationContent"
 
+// Pagination item
 const PaginationItem = React.forwardRef(({ className, ...props }, ref) => (
   <li ref={ref} className={cn("", className)} {...props} />
 ))
 PaginationItem.displayName = "PaginationItem"
 
+// Pagination link
 const PaginationLink = ({
   className,
   isActive,
@@ -45,6 +55,7 @@ const PaginationLink = ({
 )
 PaginationLink.displayName = "PaginationLink"
 
+// Previous page button
 const PaginationPrevious = ({
   className,
   ...props
@@ -60,6 +71,7 @@ const PaginationPrevious = ({
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
+// Next page button
 const PaginationNext = ({
   className,
   ...props
@@ -75,6 +87,7 @@ const PaginationNext = ({
 )
 PaginationNext.displayName = "PaginationNext"
 
+// Ellipsis indicator
 const PaginationEllipsis = ({
   className,
   ...props
@@ -89,6 +102,7 @@ const PaginationEllipsis = ({
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
 
+// Exports
 export {
   Pagination,
   PaginationContent,
