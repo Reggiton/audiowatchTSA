@@ -1,8 +1,13 @@
+// React import
 import * as React from "react"
+
+// Radix scroll area primitives
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Scroll area wrapper
 const ScrollArea = React.forwardRef(({ className, children, ...props }, ref) => (
   <ScrollAreaPrimitive.Root
     ref={ref}
@@ -17,6 +22,7 @@ const ScrollArea = React.forwardRef(({ className, children, ...props }, ref) => 
 ))
 ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName
 
+// Scrollbar component
 const ScrollBar = React.forwardRef(({ className, orientation = "vertical", ...props }, ref) => (
   <ScrollAreaPrimitive.ScrollAreaScrollbar
     ref={ref}
@@ -35,4 +41,5 @@ const ScrollBar = React.forwardRef(({ className, orientation = "vertical", ...pr
 ))
 ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName
 
+// Exports
 export { ScrollArea, ScrollBar }
