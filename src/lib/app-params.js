@@ -1,5 +1,10 @@
-// Simplified app params - no longer needs Base44 specific parameters
+/**
+ * Application Parameters
+ * Simple app configuration without external dependencies
+ * Provides URL query parameter utilities and app metadata
+ */
 
+// Extract URL query parameter by name
 const getQueryParam = (paramName) => {
   if (typeof window === 'undefined') {
     return null
@@ -9,6 +14,7 @@ const getQueryParam = (paramName) => {
   return urlParams.get(paramName)
 }
 
+// Remove query parameter from URL without page reload
 const removeQueryParam = (paramName) => {
   if (typeof window === 'undefined') {
     return
@@ -24,7 +30,7 @@ const removeQueryParam = (paramName) => {
   window.history.replaceState({}, document.title, newUrl)
 }
 
-// Simple app configuration
+// Application configuration - can be overridden via environment variables
 export const appParams = {
   appId: import.meta.env.VITE_APP_ID || 'audiowatch',
   appName: import.meta.env.VITE_APP_NAME || 'AudioWatch',
