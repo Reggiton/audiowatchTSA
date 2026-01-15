@@ -1,17 +1,19 @@
-"use client";
+"use client" // Client component
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 
-// Format: { THEME_NAME: CSS_SELECTOR }
+// Theme selectors
 const THEMES = {
   light: "",
-  dark: ".dark"
+  dark: ".dark",
 }
 
+// Chart context
 const ChartContext = React.createContext(null)
 
+// Hook for chart context
 function useChart() {
   const context = React.useContext(ChartContext)
 
@@ -22,6 +24,7 @@ function useChart() {
   return context
 }
 
+// Chart wrapper
 const ChartContainer = React.forwardRef(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
@@ -36,6 +39,7 @@ const ChartContainer = React.forwardRef(({ id, className, children, config, ...p
           className
         )}
         {...props}>
+        {/* Inject CSS variables for colors */}
         <ChartStyle id={chartId} config={config} />
         <RechartsPrimitive.ResponsiveContainer>
           {children}
@@ -46,6 +50,7 @@ const ChartContainer = React.forwardRef(({ id, className, children, config, ...p
 })
 ChartContainer.displayName = "Chart"
 
+// Generates CSS variables for chart colors
 const ChartStyle = ({
   id,
   config
@@ -63,13 +68,13 @@ const ChartStyle = ({
           .map(([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
-.map(([key, itemConfig]) => {
-const color =
-  itemConfig.theme?.[theme] ||
-  itemConfig.color
-return color ? `  --color-${key}: ${color};` : null
-})
-.join("\n")}
+  .map(([key, itemConfig]) => {
+    const color =
+      itemConfig.theme?.[theme] ||
+      itemConfig.color
+    return color ? `  --color-${key}: ${color};` : null
+  })
+  .join("\n")}
 }
 `)
           .join("\n"),
@@ -77,8 +82,10 @@ return color ? `  --color-${key}: ${color};` : null
   );
 }
 
+// Recharts tooltip
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+// Tooltip UI
 const ChartTooltipContent = React.forwardRef((
   {
     active,
@@ -99,6 +106,7 @@ const ChartTooltipContent = React.forwardRef((
 ) => {
   const { config } = useChart()
 
+  // Tooltip label
   const tooltipLabel = React.useMemo(() => {
     if (hideLabel || !payload?.length) {
       return null
@@ -166,6 +174,7 @@ const ChartTooltipContent = React.forwardRef((
                 formatter(item.value, item.name, item, index, item.payload)
               ) : (
                 <>
+                  {/* Icon or indicator */}
                   {itemConfig?.icon ? (
                     <itemConfig.icon />
                   ) : (
@@ -186,6 +195,8 @@ const ChartTooltipContent = React.forwardRef((
                         } />
                     )
                   )}
+
+                  {/* Name + value */}
                   <div
                     className={cn(
                       "flex flex-1 justify-between leading-none",
@@ -214,8 +225,10 @@ const ChartTooltipContent = React.forwardRef((
 })
 ChartTooltipContent.displayName = "ChartTooltip"
 
+// Recharts legend
 const ChartLegend = RechartsPrimitive.Legend
 
+// Legend UI
 const ChartLegendContent = React.forwardRef((
   { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },
   ref
@@ -262,7 +275,7 @@ const ChartLegendContent = React.forwardRef((
 })
 ChartLegendContent.displayName = "ChartLegend"
 
-// Helper to extract item config from a payload.
+// Helper to match payload items to config entries
 function getPayloadConfigFromPayload(
   config,
   payload,
@@ -296,9 +309,10 @@ function getPayloadConfigFromPayload(
 
   return configLabelKey in config
     ? config[configLabelKey]
-    : config[key];
+    : config[key]
 }
 
+// Exports
 export {
   ChartContainer,
   ChartTooltip,
