@@ -1,14 +1,22 @@
+// React import
 import * as React from "react"
+
+// Radix radio group primitives
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
+
+// Selected indicator icon
 import { Circle } from "lucide-react"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Radio group wrapper
 const RadioGroup = React.forwardRef(({ className, ...props }, ref) => {
   return (<RadioGroupPrimitive.Root className={cn("grid gap-2", className)} {...props} ref={ref} />);
 })
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
+// Individual radio item
 const RadioGroupItem = React.forwardRef(({ className, ...props }, ref) => {
   return (
     (<RadioGroupPrimitive.Item
@@ -26,4 +34,5 @@ const RadioGroupItem = React.forwardRef(({ className, ...props }, ref) => {
 })
 RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
 
+// Exports
 export { RadioGroup, RadioGroupItem }
