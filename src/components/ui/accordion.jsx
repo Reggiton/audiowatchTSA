@@ -4,13 +4,16 @@ import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+//Roost accordion component
 const Accordion = AccordionPrimitive.Root
 
+//Individual accordion item
 const AccordionItem = React.forwardRef(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item ref={ref} className={cn("border-b", className)} {...props} />
 ))
 AccordionItem.displayName = "AccordionItem"
 
+//Clickable trigger that opens/closes the accordian
 const AccordionTrigger = React.forwardRef(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Header className="flex">
     <AccordionPrimitive.Trigger
@@ -28,6 +31,7 @@ const AccordionTrigger = React.forwardRef(({ className, children, ...props }, re
 ))
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
+// Content that shows when the accordion is open
 const AccordionContent = React.forwardRef(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Content
     ref={ref}
@@ -38,4 +42,5 @@ const AccordionContent = React.forwardRef(({ className, children, ...props }, re
 ))
 AccordionContent.displayName = AccordionPrimitive.Content.displayName
 
+//Export components for resusing
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
