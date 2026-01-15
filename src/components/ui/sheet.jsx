@@ -1,19 +1,33 @@
 "use client";
+
+// React
 import * as React from "react"
+
+// Radix Dialog used as Sheet
 import * as SheetPrimitive from "@radix-ui/react-dialog"
+
+// Class variance utility
 import { cva } from "class-variance-authority";
+
+// Icons
 import { X } from "lucide-react"
 
+// Utility for class merging
 import { cn } from "@/lib/utils"
 
+// Root Sheet component
 const Sheet = SheetPrimitive.Root
 
+// Trigger to open the sheet
 const SheetTrigger = SheetPrimitive.Trigger
 
+// Close button component
 const SheetClose = SheetPrimitive.Close
 
+// Portal for rendering sheet outside DOM tree
 const SheetPortal = SheetPrimitive.Portal
 
+// Overlay behind the sheet
 const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
@@ -25,6 +39,7 @@ const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
+// Sheet animation + positioning variants
 const sheetVariants = cva(
   "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
   {
@@ -44,21 +59,29 @@ const sheetVariants = cva(
   }
 )
 
+// Main sheet content
 const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
-    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+    <SheetPrimitive.Content
+      ref={ref}
+      className={cn(sheetVariants({ side }), className)}
+      {...props}>
+      
+      {/* Close button */}
       <SheetPrimitive.Close
         className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>
+
       {children}
     </SheetPrimitive.Content>
   </SheetPortal>
 ))
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
+// Header wrapper
 const SheetHeader = ({
   className,
   ...props
@@ -69,6 +92,7 @@ const SheetHeader = ({
 )
 SheetHeader.displayName = "SheetHeader"
 
+// Footer wrapper
 const SheetFooter = ({
   className,
   ...props
@@ -79,6 +103,7 @@ const SheetFooter = ({
 )
 SheetFooter.displayName = "SheetFooter"
 
+// Sheet title
 const SheetTitle = React.forwardRef(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
@@ -87,6 +112,7 @@ const SheetTitle = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SheetTitle.displayName = SheetPrimitive.Title.displayName
 
+// Sheet description text
 const SheetDescription = React.forwardRef(({ className, ...props }, ref) => (
   <SheetPrimitive.Description
     ref={ref}
@@ -95,6 +121,7 @@ const SheetDescription = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SheetDescription.displayName = SheetPrimitive.Description.displayName
 
+// Exports
 export {
   Sheet,
   SheetPortal,
