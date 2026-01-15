@@ -149,43 +149,43 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
   const animationFrameRef = useRef(null);
 
   useEffect(() => {
-  // Cleanup function to stop everything
-  const cleanup = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (scriptNodeRef.current) {
-      scriptNodeRef.current.onaudioprocess = null; // IMPORTANT - stop the callback
-      scriptNodeRef.current.disconnect();
-      scriptNodeRef.current = null;
-    }
-    if (analyserRef.current) {
-      analyserRef.current.disconnect();
-      analyserRef.current = null;
-    }
-    if (sourceRef.current) {
-      sourceRef.current.disconnect();
-      sourceRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (onAudioLevel) {
-      onAudioLevel(0);
-    }
-  };
+    // Cleanup function to stop everything
+    const cleanup = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      if (scriptNodeRef.current) {
+        scriptNodeRef.current.onaudioprocess = null; // IMPORTANT - stop the callback
+        scriptNodeRef.current.disconnect();
+        scriptNodeRef.current = null;
+      }
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+        analyserRef.current = null;
+      }
+      if (sourceRef.current) {
+        sourceRef.current.disconnect();
+        sourceRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (onAudioLevel) {
+        onAudioLevel(0);
+      }
+    };
 
-  // If not listening, cleanup and exit
-  if (!isListening) {
-    cleanup();
-    return;
-  }
+    // If not listening, just return cleanup function
+    if (!isListening) {
+      return cleanup;
+    }
+
     const setup = async () => {
       if (!isListening) return;
       
@@ -284,9 +284,7 @@ export default function AudioClassifier({ onClassification, onAudioLevel, isList
       }
     };
 
-    if (isListening) {
-      setup();
-    }
+    setup();
 
     return cleanup;
   }, [isListening, onClassification, onAudioLevel, enabledSounds]);
