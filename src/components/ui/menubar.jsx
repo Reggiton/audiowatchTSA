@@ -1,41 +1,53 @@
-"use client"
+"use client" // Client component
 
+// React import
 import * as React from "react"
+
+// Radix menubar primitives
 import * as MenubarPrimitive from "@radix-ui/react-menubar"
+
+// Icons
 import { Check, ChevronRight, Circle } from "lucide-react"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
+// Menu wrapper
 function MenubarMenu({
   ...props
 }) {
   return <MenubarPrimitive.Menu {...props} />;
 }
 
+// Group wrapper
 function MenubarGroup({
   ...props
 }) {
   return <MenubarPrimitive.Group {...props} />;
 }
 
+// Portal wrapper
 function MenubarPortal({
   ...props
 }) {
   return <MenubarPrimitive.Portal {...props} />;
 }
 
+// Radio group wrapper
 function MenubarRadioGroup({
   ...props
 }) {
   return <MenubarPrimitive.RadioGroup {...props} />;
 }
 
+// Submenu wrapper
 function MenubarSub({
   ...props
 }) {
   return <MenubarPrimitive.Sub data-slot="menubar-sub" {...props} />;
 }
 
+// Main menubar
 const Menubar = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.Root
     ref={ref}
@@ -47,6 +59,7 @@ const Menubar = React.forwardRef(({ className, ...props }, ref) => (
 ))
 Menubar.displayName = MenubarPrimitive.Root.displayName
 
+// Top-level trigger
 const MenubarTrigger = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.Trigger
     ref={ref}
@@ -58,6 +71,7 @@ const MenubarTrigger = React.forwardRef(({ className, ...props }, ref) => (
 ))
 MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName
 
+// Submenu trigger
 const MenubarSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) => (
   <MenubarPrimitive.SubTrigger
     ref={ref}
@@ -73,6 +87,7 @@ const MenubarSubTrigger = React.forwardRef(({ className, inset, children, ...pro
 ))
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
 
+// Submenu content
 const MenubarSubContent = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.SubContent
     ref={ref}
@@ -84,6 +99,7 @@ const MenubarSubContent = React.forwardRef(({ className, ...props }, ref) => (
 ))
 MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName
 
+// Main menu content
 const MenubarContent = React.forwardRef((
   { className, align = "start", alignOffset = -4, sideOffset = 8, ...props },
   ref
@@ -103,6 +119,7 @@ const MenubarContent = React.forwardRef((
 ))
 MenubarContent.displayName = MenubarPrimitive.Content.displayName
 
+// Menu item
 const MenubarItem = React.forwardRef(({ className, inset, ...props }, ref) => (
   <MenubarPrimitive.Item
     ref={ref}
@@ -115,6 +132,7 @@ const MenubarItem = React.forwardRef(({ className, inset, ...props }, ref) => (
 ))
 MenubarItem.displayName = MenubarPrimitive.Item.displayName
 
+// Checkbox item
 const MenubarCheckboxItem = React.forwardRef(({ className, children, checked, ...props }, ref) => (
   <MenubarPrimitive.CheckboxItem
     ref={ref}
@@ -134,6 +152,7 @@ const MenubarCheckboxItem = React.forwardRef(({ className, children, checked, ..
 ))
 MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName
 
+// Radio item
 const MenubarRadioItem = React.forwardRef(({ className, children, ...props }, ref) => (
   <MenubarPrimitive.RadioItem
     ref={ref}
@@ -152,6 +171,7 @@ const MenubarRadioItem = React.forwardRef(({ className, children, ...props }, re
 ))
 MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName
 
+// Label
 const MenubarLabel = React.forwardRef(({ className, inset, ...props }, ref) => (
   <MenubarPrimitive.Label
     ref={ref}
@@ -160,6 +180,7 @@ const MenubarLabel = React.forwardRef(({ className, inset, ...props }, ref) => (
 ))
 MenubarLabel.displayName = MenubarPrimitive.Label.displayName
 
+// Separator
 const MenubarSeparator = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.Separator
     ref={ref}
@@ -168,6 +189,7 @@ const MenubarSeparator = React.forwardRef(({ className, ...props }, ref) => (
 ))
 MenubarSeparator.displayName = MenubarPrimitive.Separator.displayName
 
+// Shortcut text
 const MenubarShortcut = ({
   className,
   ...props
@@ -180,6 +202,7 @@ const MenubarShortcut = ({
 }
 MenubarShortcut.displayname = "MenubarShortcut"
 
+// Exports
 export {
   Menubar,
   MenubarMenu,
