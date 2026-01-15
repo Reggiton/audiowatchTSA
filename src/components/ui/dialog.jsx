@@ -1,9 +1,15 @@
 "use client" // Client component
 
+// React import
 import * as React from "react"
+
+// Radix dialog primitives
 import * as DialogPrimitive from "@radix-ui/react-dialog"
+
+// Close icon
 import { X } from "lucide-react"
 
+// Utility for class names
 import { cn } from "@/lib/utils"
 
 // Base dialog components
@@ -12,12 +18,12 @@ const DialogTrigger = DialogPrimitive.Trigger
 const DialogPortal = DialogPrimitive.Portal
 const DialogClose = DialogPrimitive.Close
 
-// Background overlay
+// Dialog overlay (background)
 const DialogOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props} />
@@ -47,7 +53,7 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-// Header section
+// Dialog header
 const DialogHeader = ({
   className,
   ...props
@@ -58,7 +64,7 @@ const DialogHeader = ({
 )
 DialogHeader.displayName = "DialogHeader"
 
-// Footer section
+// Dialog footer
 const DialogFooter = ({
   className,
   ...props
@@ -69,7 +75,7 @@ const DialogFooter = ({
 )
 DialogFooter.displayName = "DialogFooter"
 
-// Title
+// Dialog title
 const DialogTitle = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
@@ -78,7 +84,7 @@ const DialogTitle = React.forwardRef(({ className, ...props }, ref) => (
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
-// Description
+// Dialog description
 const DialogDescription = React.forwardRef(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
@@ -96,4 +102,7 @@ export {
   DialogClose,
   DialogContent,
   DialogHeader,
-  Dia
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+}
