@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { base44 } from '../lib/apiClient';
+import { api } from '../lib/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, Vibrate, Sun, Gauge, Bell, 
@@ -17,9 +17,9 @@ export default function Settings() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['soundSettings'],
     queryFn: async () => {
-      const allSettings = await base44.entities.SoundSettings.list();
+      const allSettings = await api.entities.SoundSettings.list();
       if (allSettings.length === 0) {
-        return await base44.entities.SoundSettings.create({
+        return await api.entities.SoundSettings.create({
           enabled_sounds: ['alarm', 'doorbell', 'baby_crying', 'smoke_alarm', 'siren'],
           vibration_strength: 'medium',
           flash_alerts: true,
@@ -31,7 +31,7 @@ export default function Settings() {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SoundSettings.update(id, data),
+    mutationFn: ({ id, data }) => api.entities.SoundSettings.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['soundSettings'] }),
   });
 
